@@ -14,6 +14,9 @@
 		_create: function() {
 		},
 		get: function( key ) {
+      if ($.isFunction(this[key])) {
+        return this[key]();
+      }
 			return this.options.data[ key ];
 		},
 		set: function( key, value ) {

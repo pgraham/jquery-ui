@@ -40,13 +40,21 @@ $.widget( "ui.grid", {
 	},
 	refresh: function() {
 		var tbody = this.element.find( "tbody" ).empty(),
-			template = this.options.rowTemplate;
-		// TODO try to replace $.each with passing an array to $.tmpl, produced by this.items.something()
-		// TODO how to refresh a single row?
-		$.each( this.items.options.items, function( itemId, item ) {
-			// TODO use item.toJSON() or a method like that to compute values to pass to tmpl
-			$.tmpl( template, item.options.data ).appendTo( tbody );
-		});
+        template = this.options.rowTemplate,
+        tmplVals = [],
+        that = this;
+
+    $.each( this.items.options.items, function (itemId, item) {
+      var itemVals = {};
+      $.each( that.options.columns, function (colIdx, col) {
+        var field = $.isPlainObject(col) ? col.field : col;
+        itemVals[field] = item.get(field);
+      });
+      tmplVals.push(itemVals);
+    });
+
+    $.tmpl( template, tmplVals ).appendTo( tbody );
+
 		tbody.find( "td" ).addClass( "ui-widget-content" );
 	},
 	
@@ -79,9 +87,18 @@ $.widget( "ui.grid", {
 		if ( this.options.rowTemplate ) {
 			return;
 		}
-		var template = $.map( this.options.columns, function( field ) {
-			return "<td>${" + field + "}</td>";
+		var template = $.map( this.options.columns, function( col ) {
+      if ($.isPlainObject(col)) {
+        if (col.html) {
+          return "<td>{{html " + col.field + "}}</td>";
+        } else {
+          return "<td>${" + col.field + "}</td>";
+        }
+      }
+        
+			return "<td>${" + col + "}</td>";
 		}).join( "" );
+
 		template = "<tr>" + template + "</tr>";
 		this.options.rowTemplate = template;
 	}
