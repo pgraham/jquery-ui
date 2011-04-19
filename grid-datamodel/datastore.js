@@ -29,6 +29,35 @@
 			}
 			return this.items[type];
 		},
+    add: function ( type, toAdd) {
+      var dataitems = this.items[ type ],
+          ctor      = $.ui.dataitem.types[ type ],
+          i, len;
+
+      for (i = 0, len = toAdd.length; i < len; i += 1) {
+        dataitems.options.items.push(new ctor({ data: toAdd[ i ]}));
+      }
+
+      this.items[ type ].updated();
+    },
+    remove: function ( type, toRemove) {
+      var items = this.items[ type ].options.items, item, i, j, inner, outer,
+        curId;
+
+      for (i = 0, outer = toRemove.length; i < outer; i += 1) {
+        curId = toRemove[ i ].guid;
+
+        for (j = 0, inner = items.length; j < inner; j += 1) {
+          item = items[ j ];
+          if (item.options.data.guid == curId) {
+            items.splice(j, 1);
+            break;
+          }
+        }
+      }
+
+      this.items[ type ].updated();
+    },
 		// TODO rename or remove this (call datasource.get(store) directly instead)
 		populate: function( type ) {
 			// TODO or rename datasource.get
