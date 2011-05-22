@@ -20,7 +20,7 @@
 			<button data-page="prev">Prev</button>
 			<button data-page="prevStep">-1</button>
 			<span>
-				Page <input class="current" size="4">/<span class="total">0</span>,
+				Page <input class="current" size="4"/>/<span class="total">0</span>,
 				Total records <span class="totalRecords">0</span>
 			</span>
 			<button data-page="nextStep">+1</button>
@@ -30,14 +30,14 @@
 	</script>
 	<script type="text/x-kite" id="photo-tmpl">
 		<a href="{{href}}" title="{{title}}">
-			<img src="{{src}}" width="{{width}}" height="{{height}}" alt="{{alt}}">
+			<img src="{{src}}" width="{{width}}" height="{{height}}" alt="{{alt}}" />
 		</a>
 	</script>
 	<script>
 	$(function() {
-		var datasource = $.ui.datasource({
+		var remote = $.ui.datasource({
 			paging: {
-				limit: 2
+				limit: 10
 			},
 			source: function( request, response ) {
 				$.ajax({
@@ -60,10 +60,79 @@
 								href: kite( "http://www.flickr.com/photos/{{owner}}/{{id}}/", photo )
 							}
 						});
+
 						response( result, data.photos.total );
 					}
 				});
 			}
+		});
+
+		var cache = {};
+		$.widget( "ui.nestedDatasource", $.ui.datasource, {
+			widgetEventPrefix: "datasource",
+			options: {
+				remote: null
+			},
+
+			_create: function() {
+				var options = this.options;
+				options.source = function( request, response ) {
+					var i, length,
+						cached = true,
+						tags = request.filter,
+						pageSize = request.paging.limit,
+						page = request.page,
+						start = ( page - 1 ) * pageSize;
+
+					if ( !cache[ tags ] ) {
+						cache[ tags ] = [];
+					}
+
+					// check if we have cached data
+					for ( i = start; i < start + pageSize; i++ ) {
+						if ( !cache[ tags ][ i ] ) {
+							cached = false;
+							break;
+						}
+					}
+					if ( cached ) {
+						response( cache[ tags ].slice( start, start + pageSize ), cache[ tags ].total );
+						return;
+					}
+
+					options.remote.refresh(function() {
+						var total = cache[ tags ].total = remote.totalCount;
+						var data = remote.toArray();
+						for ( i = 0, length = data.length; i < length; i++ ) {
+							cache[ tags ][ start + i ] = data[ i ];
+						}
+						response( data.slice( 0, pageSize ), total );
+					});
+				};
+				this._super( "_create" );
+			},
+
+			_setOptions: function( options ) {
+				if ( "filter" in options ) {
+					remote.option( filter, options.filter );
+				}
+				if ( "paging" in options ) {
+					remote.option( "paging", {
+						limit: ( "limit" in options.paging ?
+							options.paging.limit : this.options.paging.limit ) * 5,
+						offset: ( "offset" in options.paging ?
+							options.paging.offset : this.options.paging.offset )
+					});
+				}
+				this._super( "_setOptions", options );
+			}
+		});
+
+		var datasource = $.ui.nestedDatasource({
+			paging: {
+				limit: 2
+			},
+			remote: remote
 		});
 
 		$( "#slideshow" ).slideshow({
@@ -87,7 +156,7 @@
 <body>
 
 <h1>Photo Slideshow</h1>
-<p>features: paging, filtering</p>
+<p>features: paging</p>
 
 <hr>
 
@@ -95,7 +164,7 @@
 	Per page: <input id="page-size" value="2">
 </p>
 <p>
-	Tags to look for (comma seperated): <input id="filter" value="jquery"> 
+	Tags to look for (comma seperated): <input id="filter" value="jquery">
 </p>
 
 
