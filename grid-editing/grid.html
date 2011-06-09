@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Grid: Editing, Inline Grid</title>
+	<link rel="stylesheet" href="../themes/base/jquery.ui.all.css">
+	<link rel="stylesheet" href="../grid-spf/grid.css">
+	<script src="../jquery-1.5.1.js"></script>
+	<script src="../external/jquery.tmpl.js"></script>
+	<script src="../external/jquery.mousewheel-3.0.4.js"></script>
+	<script src="../ui/jquery.ui.core.js"></script>
+	<script src="../ui/jquery.ui.widget.js"></script>
+	<script src="../ui/jquery.ui.button.js"></script>
+	<script src="../ui/jquery.ui.spinner.js"></script>
+	<script src="../grid-spf/datasource.js"></script>
+	<script src="../grid-spf/datasource-local.js"></script>
+	<script src="../grid-spf/grid.js"></script>
+	<script src="../grid-spf/pager.js"></script>
+	<script src="editor.js"></script>
+	<script src="localstore.js"></script>
+	<script src="helpers.js"></script>
+	<script>
+	var store = $.demos.localstore( {
+		key: "grid-editing-developers",
+		initial: "../grid-spf/developers.json"
+	});
+	var localDevelopers = store.load();
+
+	$(function() {
+		var developers = $.ui.localDatasource({
+			input: localDevelopers,
+			paging: {
+				limit: 8
+			}
+		});
+		developers.save = function() {
+			store.save( localDevelopers );
+			return this;
+		}
+
+		var grid = $.ui.grid( {
+			source: developers,
+			refresh: function() {
+				$( this ).find( "td:not(:has(button))" ).each( function() {
+					var th = $( this ).parents( "table:first" ).find( "th" ).eq( this.cellIndex ),
+						field = th.data( "field" );
+					$( this ).editor({
+						type: th.data( "type" ),
+						submit: function( event, ui ) {
+							var object = $( this ).tmplItem().data;
+							set(object, field, ui.value);
+							developers.save();
+						}
+					});
+				});
+			}
+		}, "#developers-local" );
+
+		// TODO find a better way to add markup to the generated row template
+		grid.options.rowTemplate = grid.options.rowTemplate.substring( 0, grid.options.rowTemplate.length - 35 )
+			+ "<button class='edit'>Edit</button></td>"
+			+ "<td><button class='remove'>Remove</button></td></tr>";
+
+		var developer;
+		var editForm = $( "#editForm" ).hide().submit( function( event ) {
+			event.preventDefault();
+			serializeForm( this, developer );
+			developers.save().refresh();
+			editForm.hide();
+		});
+		grid.element.delegate( "button.edit", "click", function() {
+			developer = $( this ).tmplItem().data;
+			deserializeForm( editForm, developer );
+			editForm.show();
+		});
+		grid.element.delegate( "button.remove", "click", function() {
+			var developer = $( this ).tmplItem().data;
+			for ( var i = localDevelopers.length - 1; i >= 0; i-- ) {
+				if ( localDevelopers[i] === developer ) {
+					localDevelopers.splice( i, 1 );
+				}
+			}
+			developers.save().refresh();
+		});
+
+		$( "#pageDevelopers" ).pager({
+			source: developers
+		});
+
+		$( "#addDeveloper" ).click( function() {
+			// add at front so that it becomes visible without paging
+			localDevelopers.unshift({
+				firstName: "Peter",
+				lastName: "Pan",
+				country: "Unknown",
+				bitcoins: 0,
+				random: {
+					value: 0
+				}
+			});
+			developers.save().refresh();
+		});
+
+		developers.refresh();
+	});
+	</script>
+	<style>
+	</style>
+</head>
+<body>
+
+<h1>Grids with editable local datasource</h1>
+
+<h2>local data source</h2>
+<p id="pageDevelopers">
+	<button data-page="first">First</button>
+	<button data-page="prev">Prev</button>
+	<button data-page="prevStep">-1</button>
+	<span>
+		Page <input class="current" size="4"/>/<span class="total">0</span>,
+		Total records <span class="totalRecords">0</span>
+	</span>
+	<button data-page="nextStep">+1</button>
+	<button data-page="next">Next</button>
+	<button data-page="last">Last</button>
+</p>
+<table id="developers-local">
+	<thead>
+		<tr>
+			<th data-field="firstName">First Name</th>
+			<th data-field="lastName">Last Name</th>
+			<th data-field="country">Country</th>
+			<th data-field="bitcoins" data-type="number">Bitcoins</th>
+			<th data-field="random.value" data-type="number">Random</th>
+			<th>Edit</th>
+			<th>Remove</th>
+		</tr>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
+
+<div>
+	<button id="addDeveloper">Insert new developer</button>
+</div>
+<form id="editForm">
+	<input type="text" name="firstName" placeholder="Firstname" />
+	<input type="text" name="lastName" placeholder="Lastname" />
+	<input type="text" name="country" placeholder="Country" />
+	<input type="text" name="random.value" placeholder="Random Value" />
+	<input type="submit" value="Save changes" />
+</form>
+
+</body>
+</html>
