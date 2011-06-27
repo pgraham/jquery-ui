@@ -12,14 +12,27 @@
 	<script src="../ui/jquery.ui.widget.js"></script>
 	<script src="../ui/jquery.ui.button.js"></script>
 	<script src="../ui/jquery.ui.spinner.js"></script>
+	<script src="../ui/jquery.ui.position.js"></script>
+	<script src="../ui/jquery.ui.tooltip.js"></script>
 	<script src="../grid-spf/datasource.js"></script>
 	<script src="../grid-spf/datasource-local.js"></script>
 	<script src="../grid-spf/grid.js"></script>
 	<script src="../grid-spf/pager.js"></script>
 	<script src="editor.js"></script>
+	<script src="grid-editor.js"></script>
+	<script src="navigator.js"></script>
 	<script src="localstore.js"></script>
 	<script src="helpers.js"></script>
 	<script>
+	if ( !window.console ) {
+		window.console = {
+			log: function() {
+				var message = Array.prototype.slice.call( arguments, 1 ).join( ", " );
+				$("<div>").text( message ).appendTo("body");
+			}
+		}
+	}
+
 	var store = $.demos.localstore( {
 		key: "grid-editing-developers",
 		initial: "../grid-spf/developers.json"
@@ -31,6 +44,17 @@
 			input: localDevelopers,
 			paging: {
 				limit: 8
+			},
+			propertychange: function(event, ui) {
+				console.log("field", ui.path, "changed from", ui.oldValue, "to", ui.newValue);
+			},
+			objectchange: function(event, ui) {
+				console.log("developer at index", ui.index, "changed", ui.object);
+				this.save();
+			},
+			change: function(event, ui) {
+				console.log("developer(s) at index", ui.index, ui.change + "ed", ui.items);
+				this.save().refresh();
 			}
 		});
 		developers.save = function() {
@@ -39,48 +63,67 @@
 		}
 
 		var grid = $.ui.grid( {
-			source: developers,
-			refresh: function() {
-				$( this ).find( "td:not(:has(button))" ).each( function() {
-					var th = $( this ).parents( "table:first" ).find( "th" ).eq( this.cellIndex ),
-						field = th.data( "field" );
-					$( this ).editor({
-						type: th.data( "type" ),
-						submit: function( event, ui ) {
-							var object = $( this ).tmplItem().data;
-							set(object, field, ui.value);
-							developers.save();
-						}
-					});
-				});
-			}
+			source: developers
 		}, "#developers-local" );
+
+		grid.element.gridEditor({
+			items: "td:not(:has(button))",
+			type: function(cell) {
+				return grid.element.find( "th" ).eq( cell[ 0 ].cellIndex ).data( "type" );
+			},
+			submit: function( event, ui) {
+				var object = ui.item.tmplItem().data,
+					field = grid.element.find( "th" ).eq( ui.item[ 0 ].cellIndex ).data( "field" ),
+					oldValue = get(object, field);
+				set(object, field, ui.value);
+				developers._trigger("propertychange", event, {
+					path: field,
+					oldValue: oldValue,
+					newValue: ui.value
+				});
+				developers._trigger("objectchange", event, {
+					object: object
+				});
+				// for the navigator
+				grid.element.focus();
+			}
+		});
+		grid.element.navigator();
 
 		// TODO find a better way to add markup to the generated row template
 		grid.options.rowTemplate = grid.options.rowTemplate.substring( 0, grid.options.rowTemplate.length - 35 )
 			+ "<button class='edit'>Edit</button></td>"
 			+ "<td><button class='remove'>Remove</button></td></tr>";
 
-		var developer;
+		var developer, tmplItem;
 		var editForm = $( "#editForm" ).hide().submit( function( event ) {
 			event.preventDefault();
 			serializeForm( this, developer );
-			developers.save().refresh();
+			// TODO the ui-widget class is added after rendering the template by the grid
+			// therefore just rerendering the row looks bad, need to update the template to include the classes
+			// or extend the grid to refresh a single row - need that anyway, as currently the inline editor breaks
+			tmplItem.update();
+			developers._trigger("objectchange", event, {
+				index: localDevelopers.indexOf(developer),
+				object: developer
+			});
 			editForm.hide();
 		});
 		grid.element.delegate( "button.edit", "click", function() {
-			developer = $( this ).tmplItem().data;
-			deserializeForm( editForm, developer );
+			tmplItem = $( this ).tmplItem();
+			developer = tmplItem.data;
+			$( "#edit-tmpl" ).tmpl( meta(developer) ).appendTo( editForm.find("fieldset").empty() );
 			editForm.show();
 		});
 		grid.element.delegate( "button.remove", "click", function() {
 			var developer = $( this ).tmplItem().data;
-			for ( var i = localDevelopers.length - 1; i >= 0; i-- ) {
-				if ( localDevelopers[i] === developer ) {
-					localDevelopers.splice( i, 1 );
-				}
-			}
-			developers.save().refresh();
+			var index = localDevelopers.indexOf( developer );
+			localDevelopers.splice( index, 1 );
+			developers._trigger("change", event, {
+				change: "remove",
+				index: index,
+				items: [ developer ]
+			});
 		});
 
 		$( "#pageDevelopers" ).pager({
@@ -98,13 +141,20 @@
 					value: 0
 				}
 			});
-			developers.save().refresh();
+			developers._trigger("change", event, {
+				change: "insert",
+				index: 0,
+				items: [localDevelopers[0]]
+			});
 		});
+
+		$("form").tooltip();
 
 		developers.refresh();
 	});
 	</script>
 	<style>
+		.navigator-active { border: 2px solid blue; }
 	</style>
 </head>
 <body>
@@ -144,12 +194,21 @@
 	<button id="addDeveloper">Insert new developer</button>
 </div>
 <form id="editForm">
-	<input type="text" name="firstName" placeholder="Firstname" />
-	<input type="text" name="lastName" placeholder="Lastname" />
-	<input type="text" name="country" placeholder="Country" />
-	<input type="text" name="random.value" placeholder="Random Value" />
+	<fieldset>
+	</fieldset>
 	<input type="submit" value="Save changes" />
 </form>
+<script id="edit-tmpl" type="text/x-jquery-tmpl">
+{{if $.isArray(value)}}
+	<ul>
+		{{each(index, valueX) value}}
+			<li><input type="text" name="${name}" placeholder="${label}" value="${valueX}" title="${label}" /></li>
+		{{/each}}
+	</ul>
+{{else}}
+	<input type="text" name="${name}" placeholder="${label}" value="${value}" title="${label}" />
+{{/if}}
+</script>
 
 </body>
 </html>
