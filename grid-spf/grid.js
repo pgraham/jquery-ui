@@ -32,24 +32,17 @@ $.widget( "ui.grid", {
 	},
 	refresh: function() {
 		// TODO this code assumes a single tbody which is not a safe assumption
-		var tbody = this.element.find( "tbody" ).empty(),
-			template = this.options.rowTemplate;
-		// TODO try to replace $.each with passing an array to $.tmpl, produced by this.items.something()
-		// TODO how to refresh a single row?
-		$.each( this.options.source.toArray(), function( itemId, item ) {
-			// TODO use item.toJSON() or a method like that to compute values to pass to tmpl
-			$.tmpl( template, item ).appendTo( tbody );
-		});
-		tbody.find( "td" ).addClass( "ui-widget-content" );
+		var tbody = this.element.find( "tbody" ).empty();
+		// TODO how to refresh a single row? -> tmplItem().update()
+		$.tmpl( this.options.rowTemplate, this.options.source.toArray() ).appendTo( tbody );
 		this._trigger("refresh");
 	},
 
 	_columns: function() {
 		if ( this.options.columns ) {
-			// TODO this code assumes any present th is a column header, but it may be a row header
-			if ( !this.element.find( "th" ).length ) {
+			var head = this.element.find("thead");
+			if ( !thead.find( "th" ).length ) {
 				// TODO improve this
-				var head = this.element.find("thead");
 				$.each( this.options.columns, function(index, column) {
 					$("<th>").attr("data-field", column).text(column).appendTo(head)
 				});
@@ -70,7 +63,7 @@ $.widget( "ui.grid", {
 		if ( this.options.rowTemplate ) {
 			return;
 		}
-		var headers = this.element.find( "th" );
+		var headers = this.element.find( "thead th" );
 		var template = $.map( this.options.columns, function( field, index ) {
 			// TODO how to specify a custom template using the columns option?
 			// make columns array-of-objects (optional) to contain all the potential data attributes?
@@ -79,10 +72,11 @@ $.widget( "ui.grid", {
 			if ( customTemplate ) {
 				return $(customTemplate).html();
 			}
-			return "<td>${" + field + "}</td>";
+			return "<td class=\"ui-widget-content\">${" + field + "}</td>";
 		}).join( "" );
 		template = "<tr>" + template + "</tr>";
-		this.options.rowTemplate = template;
+		// compile the template
+		this.options.rowTemplate = $.template( template );
 	}
 });
 
