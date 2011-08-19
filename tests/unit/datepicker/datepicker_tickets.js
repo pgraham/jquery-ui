@@ -49,7 +49,7 @@ test('Ticket #7244: date parser does not fail when too many numbers are passed i
 });
 
 test('Ticket #7228: Add Oridinal Suffix to Date Picker Formatting', function () {
-  var date, fmtd,
+  var date, fmtd, prsd
       settings = {
         monthNames: [
           'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
@@ -59,18 +59,30 @@ test('Ticket #7228: Add Oridinal Suffix to Date Picker Formatting', function () 
   date = new Date('January 01, 2011');
   fmtd = $.datepicker.formatDate('MM dS', date, settings);
   equal(fmtd, 'January 1st');
+  prsd = $.datepicker.parseDate('MM dS', 'January 1st', settings);
+  equal(prsd.getMonth(), 0);
+  equal(prsd.getDate(), 1);
 
   date = new Date('January 02, 2011');
   fmtd = $.datepicker.formatDate('MM dS', date, settings);
   equal(fmtd, 'January 2nd');
+  prsd = $.datepicker.parseDate('MM dS', 'January 2nd', settings);
+  equal(prsd.getMonth(), 0);
+  equal(prsd.getDate(), 2);
 
   date = new Date('January 03, 2011');
   fmtd = $.datepicker.formatDate('MM dS', date, settings);
   equal(fmtd, 'January 3rd');
+  prsd = $.datepicker.parseDate('MM dS', 'January 3rd', settings);
+  equal(prsd.getMonth(), 0);
+  equal(prsd.getDate(), 3);
 
   date = new Date('January 04, 2011');
   fmtd = $.datepicker.formatDate('MM dS', date, settings);
   equal(fmtd, 'January 4th');
+  prsd = $.datepicker.parseDate('MM dS', 'January 4th', settings);
+  equal(prsd.getMonth(), 0);
+  equal(prsd.getDate(), 4);
 
   date = new Date('January 11, 2011');
   fmtd = $.datepicker.formatDate('MM dS', date, settings);
