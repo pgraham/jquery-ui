@@ -4,22 +4,33 @@
  * Depends on:
  * widget
  * editor
+ * observable
  */
 (function( $ ) {
 
 $.widget( "ui.gridEditor", {
+	options: {
+		editor: function( cell, grid ) {
+			return grid.options.columns[ cell[ 0 ].cellIndex ].editor;
+		},
+		editorOptions: function( cell, grid ) {
+			return grid.options.columns[ cell[ 0 ].cellIndex ].editorOptions;
+		},
+		items: "td"
+	},
 	_create: function() {
+		var grid = this.element.data("grid");
 		this._bind({
-			click: function( event ) {
-				var that = this;
+			dblclick: function( event ) {
 				var target = $( event.target ).closest( this.options.items );
 				if ( target.length && !target.data( "editor" ) ) {
 					target.editor({
-						type: this.options.type( target ),
-						submit: function( event, ui ) {
-							that._trigger( "submit", event, $.extend( {
-								item: target
-							}, ui ));
+						editor: this.options.editor( target, grid ),
+						editorOptions: this.options.editorOptions( target, grid ),
+						submit: function( event, ui) {
+							var object = target.closest("tr").data( "grid-item" ),
+								property = grid.options.columns[ target[ 0 ].cellIndex ].property;
+							$.observable( object ).property( property, ui.value );
 						}
 					}).editor("start");
 				}

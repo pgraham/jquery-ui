@@ -2,14 +2,17 @@ commonWidgetTests( "spinner", {
 	defaults: {
 		disabled: false,
 		incremental: true,
-		max: null,
-		min: null,
+		max: Number.MAX_VALUE,
+		min: -Number.MAX_VALUE,
 		numberFormat: null,
 		page: 10,
-		step: null,
-		value: null,
+		step: 1,
 
 		// callbacks
-		create: null
+		change: null,
+		create: null,
+		spin: null,
+		start: null,
+		stop: null
 	}
 });

@@ -5,7 +5,7 @@
 	<title>Grid: Sorting, Paging, Filtering</title>
 	<link rel="stylesheet" href="../themes/base/jquery.ui.all.css">
 	<link rel="stylesheet" href="grid.css">
-	<script src="../jquery-1.5.1.js"></script>
+	<script src="../jquery-1.6.2.js"></script>
 	<script src="../external/jquery.tmpl.js"></script>
 	<script src="../ui/jquery.ui.core.js"></script>
 	<script src="../ui/jquery.ui.widget.js"></script>
@@ -86,7 +86,10 @@
 
 		$( "#developers-local" ).grid({
 			columns: [ "firstName", "lastName", "country" ],
-			source: developers
+			source: developers,
+			select: function( event, ui ) {
+				console.log( "Selected " + ui.item.firstName );
+			}
 		});
 
 		$( "#filterDevelopers" ).filterControl( developers );
@@ -163,9 +166,9 @@
 <table id="developers-local">
 	<thead>
 		<tr>
-			<th data-field="firstName">First Name</th>
-			<th data-field="lastName">Last Name</th>
-			<th data-field="country">Country</th>
+			<th data-property="firstName">First Name</th>
+			<th data-property="lastName">Last Name</th>
+			<th data-property="country">Country</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -201,9 +204,9 @@
 <table id="movies">
 	<thead>
 		<tr>
-			<th data-field="Name">Name</th>
-			<th data-field="ReleaseYear">Release Year</th>
-			<th data-field="AverageRating">Average Rating</th>
+			<th data-property="Name">Name</th>
+			<th data-property="ReleaseYear">Release Year</th>
+			<th data-property="AverageRating">Average Rating</th>
 		</tr>
 	</thead>
 	<tbody>
