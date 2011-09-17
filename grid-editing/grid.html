@@ -5,7 +5,8 @@
 	<title>Grid: Editing, Inline Grid</title>
 	<link rel="stylesheet" href="../themes/base/jquery.ui.all.css">
 	<link rel="stylesheet" href="../grid-spf/grid.css">
-	<script src="../jquery-1.5.1.js"></script>
+	<script src="../jquery-1.6.2.js"></script>
+	<script src="../external/globalize.js"></script>
 	<script src="../external/jquery.tmpl.js"></script>
 	<script src="../external/jquery.mousewheel-3.0.4.js"></script>
 	<script src="../ui/jquery.ui.core.js"></script>
@@ -14,12 +15,17 @@
 	<script src="../ui/jquery.ui.spinner.js"></script>
 	<script src="../ui/jquery.ui.position.js"></script>
 	<script src="../ui/jquery.ui.tooltip.js"></script>
+	<script src="../ui/jquery.ui.autocomplete.js"></script>
+	<script src="../ui/jquery.ui.menu.js"></script>
 	<script src="../grid-spf/datasource.js"></script>
 	<script src="../grid-spf/datasource-local.js"></script>
 	<script src="../grid-spf/grid.js"></script>
 	<script src="../grid-spf/pager.js"></script>
+	<script src="observable.js"></script>
 	<script src="editor.js"></script>
 	<script src="grid-editor.js"></script>
+	<script src="editor-countrycomplete.js"></script>
+	<script src="editor-randomspinner.js"></script>
 	<script src="navigator.js"></script>
 	<script src="localstore.js"></script>
 	<script src="helpers.js"></script>
@@ -44,117 +50,93 @@
 			input: localDevelopers,
 			paging: {
 				limit: 8
-			},
-			propertychange: function(event, ui) {
-				console.log("field", ui.path, "changed from", ui.oldValue, "to", ui.newValue);
-			},
-			objectchange: function(event, ui) {
-				console.log("developer at index", ui.index, "changed", ui.object);
-				this.save().refresh();
-			},
-			change: function(event, ui) {
-				console.log("developer(s) at index", ui.index, ui.change + "ed", ui.items);
-				this.save().refresh();
 			}
 		});
 		developers.save = function() {
 			store.save( localDevelopers );
 			return this;
 		}
+		// TODO $.observable should support this binding, along with a less intrusive event facility
+		function bindChange(index, developer) {
+			$.observable( developer ).bind("change", function(event, ui) {
+				developers.refresh().save();
+			});
+		}
+		$.observable( localDevelopers ).bind("insert remove", function(event, ui) {
+			if ( event.type === "insert" ) {
+				$.each( ui.items, bindChange );
+			}
+			developers.refresh().save();
+		})
+		$.each( localDevelopers, bindChange );
 
-		var grid = $.ui.grid( {
+		var grid = $( "#developers-local" ).grid({
 			source: developers
-		}, "#developers-local" );
+		});
 
-		grid.element.gridEditor({
+		grid.gridEditor({
 			items: "td:not(:has(button))",
-			type: function(cell) {
-				// TODO should be possible to retrieve this from grid.options.columns
-				return grid.element.find( "th" ).eq( cell[ 0 ].cellIndex ).data( "type" );
-			},
-			submit: function( event, ui) {
-				var object = ui.item.tmplItem().data,
-					field = grid.element.find( "th" ).eq( ui.item[ 0 ].cellIndex ).data( "field" ),
-					oldValue = get(object, field);
-				set(object, field, ui.value);
-				developers._trigger("propertychange", event, {
-					path: field,
-					oldValue: oldValue,
-					newValue: ui.value
-				});
+			done: function() {
 				// for the navigator
-				grid.element.focus();
+				grid.focus();
 			}
 		});
-		grid.element.navigator();
+		grid.navigator();
 
-		var developer, tmplItem;
-		var editForm = $( "#editForm" ).hide().submit( function( event ) {
+		var developer;
+		var editForm = $( "#editForm" ).tooltip().hide().submit( function( event ) {
 			event.preventDefault();
-			serializeForm( this, developer );
-			developers._trigger("objectchange", event, {
-				index: localDevelopers.indexOf(developer),
-				object: developer
-			});
+			$.observable(developer).property( serializeForm( this ) );
 			editForm.hide();
 		});
-		grid.element.delegate( "button.edit", "click", function() {
-			tmplItem = $( this ).tmplItem();
-			developer = tmplItem.data;
+		grid.delegate( "button.edit", "click", function() {
+			developer = $( this ).closest("tr").data( "grid-item" );
 			$( "#edit-tmpl" ).tmpl( meta(developer) ).appendTo( editForm.find("fieldset").empty() );
-			editForm.show();
+			editForm.show().find("input:first").focus();
 		});
-		grid.element.delegate( "button.remove", "click", function() {
-			var developer = $( this ).tmplItem().data;
-			var index = localDevelopers.indexOf( developer );
-			localDevelopers.splice( index, 1 );
-			developers._trigger("change", event, {
-				change: "remove",
-				index: index,
-				items: [ developer ]
-			});
+		grid.delegate( "button.remove", "click", function() {
+			var developer = $( this ).closest("tr").data( "grid-item" );
+			$.observable( localDevelopers ).remove( developer );
 		});
 
 		$( "#pageDevelopers" ).pager({
 			source: developers
 		});
 
-		$( "#addDeveloper" ).click( function() {
-			// add at front so that it becomes visible without paging
-			localDevelopers.unshift({
-				firstName: "Peter",
-				lastName: "Pan",
-				country: "Unknown",
-				bitcoins: 0,
+		function newDeveloper() {
+			return {
+				firstName: [ "Peter", "Unknown", "Carl" ][ Math.floor( Math.random() * 3 ) ],
+				lastName: [ "Pan", "Unkown", "Worth" ][ Math.floor( Math.random() * 3 ) ],
+				country: [ "Unknown", "Pandistan", "Petertan" ][ Math.floor( Math.random() * 3 ) ],
+				bitcoins: Math.floor( Math.random() * 1500 ),
 				random: {
-					value: 0
-				}
-			});
-			developers._trigger("change", event, {
-				change: "insert",
-				index: 0,
-				items: [localDevelopers[0]]
-			});
+					value: Math.floor( Math.random() * 13 )
+				},
+				date: +new Date()
+			}
+		}
+		$( "#addDeveloper" ).click( function() {
+			$.observable( localDevelopers ).insert( 0, newDeveloper() );
 		});
-
-		$("form").tooltip();
+		$( "#addDeveloperAtEnd" ).click( function() {
+			$.observable( localDevelopers ).insert( newDeveloper() );
+		});
 
 		developers.refresh();
-
-		$.widget("ui.datalist", {
-			_create: function() {
-				$.ui.datalist.lists.push(this.options);
-			}
-		});
-		$.ui.datalist.lists = [];
-		$.ui.datalist({
-			name: "countries",
-			items: ["USA", "Germany", "China", "Canada", "UK", "Australia", "Austria"]
-		});
 	});
 	</script>
 	<style>
 		.navigator-active { background: rgba(0,0,255,0.1); }
+		.ui-autocomplete { width: 200px; max-height: 200px; overflow: auto; }
+		#developers-local {
+			width: 700px;
+		}
+		thead td { text-align: center; }
+		#pageDevelopers { text-align: center; }
+		.totals { padding-left: 1em; }
+
+		/* TODO make this actually work */
+		tbody { min-height: 264px; }
 	</style>
 </head>
 <body>
@@ -162,36 +144,47 @@
 <h1>Grids with editable local datasource</h1>
 
 <h2>local data source</h2>
-<p id="pageDevelopers">
-	<button data-page="first">First</button>
-	<button data-page="prev">Prev</button>
-	<button data-page="prevStep">-1</button>
-	<span>
-		Page <input class="current" size="4"/>/<span class="total">0</span>,
-		Total records <span class="totalRecords">0</span>
-	</span>
-	<button data-page="nextStep">+1</button>
-	<button data-page="next">Next</button>
-	<button data-page="last">Last</button>
-</p>
+<p>See also <a href="grid-selectable.html">grid-selectable</a></p>
 <table id="developers-local">
 	<thead>
 		<tr>
-			<th data-field="firstName">First Name</th>
-			<th data-field="lastName">Last Name</th>
-			<th data-field="country" data-list="countries">Country</th>
-			<th data-field="bitcoins" data-type="number">Bitcoins</th>
-			<th data-field="random.value" data-type="number">Random</th>
-			<th data-template="#cell-edit-tmpl">Edit</th>
-			<th data-template="#cell-remove-tmpl">Remove</th>
+			<td colspan="9" class="ui-widget-header">Developers Grid</td>
+		</tr>
+		<tr>
+			<th width="70" data-property="firstName">First Name</th>
+			<th width="70" data-property="lastName">Last Name</th>
+			<th width="70" data-property="country" data-editor="countrycomplete">Country</th>
+			<th width="60" data-property="bitcoins" data-type="number" data-editor="spinner">Bitcoins</th>
+			<th width="70" data-template="#cell-date-tmpl">Date</th>
+			<th width="80" data-template="#cell-time-tmpl">Time</th>
+			<th width="60" data-property="random.value" data-type="number" data-editor="randomSpinner" data-editor-options='{"min":-1, "max": 125}'>Random</th>
+			<th width="40" data-template="#cell-edit-tmpl">Edit</th>
+			<th width="60" data-template="#cell-remove-tmpl">Remove</th>
 		</tr>
 	</thead>
 	<tbody>
 	</tbody>
+	<tfoot>
+		<tr>
+			<td id="pageDevelopers" colspan="9" class="ui-state-default">
+				<button data-page="first">First</button>
+				<button data-page="prev">Prev</button>
+				<span>
+					Page <input class="current" size="4"/> of <span class="total">0</span>
+				</span>
+				<button data-page="next">Next</button>
+				<button data-page="last">Last</button>
+				<span class="totals">
+					Total records <span class="totalRecords">0</span>
+				</span>
+			</td>
+		</tr>
+	</tfoot>
 </table>
 
 <div>
 	<button id="addDeveloper">Insert new developer</button>
+	<button id="addDeveloperAtEnd">Insert new developer at the end</button>
 </div>
 <form id="editForm">
 	<fieldset>
@@ -208,6 +201,12 @@
 {{else}}
 	<input type="text" name="${name}" placeholder="${label}" value="${value}" title="${label}" />
 {{/if}}
+</script>
+<script id="cell-date-tmpl" type="text/x-jquery-tmpl">
+	<td class="ui-widget-content">${Globalize.format(new Date(date), "d")}</td>
+</script>
+<script id="cell-time-tmpl" type="text/x-jquery-tmpl">
+	<td class="ui-widget-content">${Globalize.format(new Date(date), "T")}</td>
 </script>
 <script id="cell-edit-tmpl" type="text/x-jquery-tmpl">
 	<td class="ui-widget-content"><button class='edit'>Edit</button></td>

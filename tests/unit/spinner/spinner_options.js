@@ -1,32 +1,29 @@
-/*
- * spinner_options.js
- */
-(function($) {
+(function( $ ) {
 
-module("spinner: options");
+module( "spinner: options" );
 
-test("numberFormat, number", function() {
-	var el = $("#spin").spinner({
-		value: "1",
-		numberFormat: "n"
-	});
-	equal(el.val(), "1.00");
+test( "numberFormat, number", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 0 ).spinner({ numberFormat: "n" });
+	equal( element.val(), "0.00", "formatted on init" );
+	element.spinner( "stepUp" );
+	equal( element.val(), "1.00", "formatted after step" );
 });
 
-test("numberFormat, number, simple", function() {
-	var el = $("#spin").spinner({
-		value: "1",
-		numberFormat: "n0"
-	});
-	equal(el.val(), "1");
+test( "numberFormat, number, simple", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 0 ).spinner({ numberFormat: "n0" });
+	equal( element.val(), "0", "formatted on init" );
+	element.spinner( "stepUp" );
+	equal( element.val(), "1", "formatted after step" );
 });
 
-test("numberFormat, currency", function() {
-	var el = $("#spin").spinner({
-		value: "1",
-		numberFormat: "C"
-	});
-	equal(el.val(), "$1.00");
+test( "numberFormat, currency", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 0 ).spinner({ numberFormat: "C" });
+	equal( element.val(), "$0.00", "formatted on init" );
+	element.spinner( "stepUp" );
+	equal( element.val(), "$1.00", "formatted after step" );
 });
 
 /* TODO figure out how to test this properly
@@ -67,88 +64,52 @@ test("incremental - true (default)", function() {
 });
 */
 
-test("max", function() {
-	var el = $("#spin").spinner({ max: 100, value: 1000 });
-	equals(el.val(), 100, "max constrained if value option is greater");
-	
-	el.spinner('value', 1000);
-	equals(el.val(), 100, "max constrained if value method is greater");
-	
-	el.val(1000).blur();
-	equals(el.val(), 100, "max constrained if manual entry");
+test( "max", function() {
+	expect( 3 );
+	var element = $( "#spin" ).val( 1000 ).spinner({ max: 100 });
+	equals( element.val(), 1000, "value not constrained on init" );
+
+	element.spinner( "value", 1000 );
+	equals( element.val(), 100, "max constrained if value method is greater" );
+
+	element.val( 1000 ).blur();
+	equals( element.val(), 1000, "max not constrained if manual entry" );
 });
 
-test("min", function() {
-	var el = $("#spin").spinner({ min: -100, value: -1000 });
-	equals(el.val(), -100, "min constrained if value option is greater");
-	
-	el.spinner('value', -1000);
-	equals(el.val(), -100, "min constrained if value method is greater");
-	
-	el.val(-1000).blur();
-	equals(el.val(), -100, "min constrained if manual entry");
+test( "min", function() {
+	expect( 3 );
+	var element = $( "#spin" ).val( -1000 ).spinner({ min: -100 });
+	equals( element.val(), -1000, "value not constrained on init" );
+
+	element.spinner( "value", -1000 );
+	equals( element.val(), -100, "min constrained if value method is greater" );
+
+	element.val( -1000 ).blur();
+	equals( element.val(), -1000, "min not constrained if manual entry" );
 });
 
-test("step, 2", function() {
-	var el = $("#spin").spinner({ step: 2 });
-	equals(el.val(), "0", "value initialized to");
-	
-	for ( var i = 0 ; i < 5 ; i++ ) {
-		simulateKeyDownUp(el, $.ui.keyCode.UP);
-	}
-	equals(el.val(), "10", "UP 5 times with step: 2");
+test( "step, 2", function() {
+	expect( 3 );
+	var element = $( "#spin" ).val( 0 ).spinner({ step: 2 });
 
-	el.spinner('value', '10.5');
-	equals(el.val(), "10.5", "value reset to");
+	element.spinner( "stepUp" );
+	equals( element.val(), "2", "stepUp" );
 
-	el.spinner('option', 'step', 2);
-	for ( var i = 0 ; i < 5 ; i++ ) {
-		simulateKeyDownUp(el, $.ui.keyCode.UP);
-	}
-	equals(el.val(), "20.5", "UP 5 times with step: 2");
+	element.spinner( "value", "10.5" );
+	equals( element.val(), "10.5", "value reset to 10.5" );
+
+	element.spinner( "stepUp" );
+	equals( element.val(), "12.5", "stepUp" );
 });
 
-test("step, 0.7", function() {
-	var el = $("#spin").spinner({
-		step: 0.7,
-		numberFormat: "n1"
+test( "step, 0.7", function() {
+	expect( 1 );
+	var element = $("#spin").val( 0 ).spinner({
+		step: 0.7
 	});
-	equals(el.val(), "0.0", "value initialized to");
 
-	simulateKeyDownUp(el, $.ui.keyCode.DOWN);
-	equals(el.val(), "-0.7", "DOWN 1 time with step: 0.7");
-
-	for ( var i = 0 ; i < 11 ; i++ ) {
-		simulateKeyDownUp(el, $.ui.keyCode.UP);
-	}
-	equals(el.val(), "7.0", "UP 11 times with step: 0.7");
+	element.spinner( "stepUp" );
+	equals( element.val(), "0.7", "stepUp" );
 });
 
-test("value, default, specified in markup", function() {
-	var el = $('#spin2').spinner();
-	equals(el.val(), 2, "starting value");
-});
-
-test("value, default, nothing specified", function() {
-	var el = $('#spin').spinner();
-	equals(el.val(), 0, "starting value");
-});
-
-test("value, override", function() {
-	var el = $('#spin').spinner({ value: 100 });
-	equals(el.val(), 100, "starting value");
-});
-
-test("value, override markup", function() {
-	var el = $('#spin2').spinner({ value: 100 });
-	equals(el.val(), 100, "starting value");
-});
-
-test("value, override later", function() {
-	var el = $('#spin').spinner();
-	equals(el.val(), 0, "starting value");
-	el.spinner('option', 'value', 1000);
-	equals(el.val(), 1000, "value option changed and set as current value");
-});
-
-})(jQuery);
+})( jQuery );

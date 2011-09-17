@@ -15,6 +15,7 @@ $.widget( "ui.datasource", {
 		return this.data;
 	},
 
+	// TODO this needs to be applied to init options as well, to work sort: "prop" work
 	_setOption: function( key, value ) {
 		// reset offset to 0 when changing limit
 		// TODO actually only necessary when offset > offset + new limit
@@ -65,9 +66,10 @@ $.widget( "ui.datasource", {
 		var that = this;
         this.options.source( request, function( data, totalCount ) {
 			that.data = data;
-			that.totalCount = totalCount;
+			that.totalCount = parseInt(totalCount, 10);
 			that._trigger( "response" );
 		});
+        return this;
 	}
 });
 
