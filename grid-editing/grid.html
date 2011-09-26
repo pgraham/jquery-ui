@@ -17,8 +17,8 @@
 	<script src="../ui/jquery.ui.tooltip.js"></script>
 	<script src="../ui/jquery.ui.autocomplete.js"></script>
 	<script src="../ui/jquery.ui.menu.js"></script>
-	<script src="../grid-spf/datasource.js"></script>
-	<script src="../grid-spf/datasource-local.js"></script>
+	<script src="../grid-spf/dataview.js"></script>
+	<script src="../grid-spf/dataview-local.js"></script>
 	<script src="../grid-spf/grid.js"></script>
 	<script src="../grid-spf/pager.js"></script>
 	<script src="observable.js"></script>
@@ -46,47 +46,27 @@
 	var localDevelopers = store.load();
 
 	$(function() {
-		var developers = $.ui.localDatasource({
+		var developers = $.ui.localDataview({
 			input: localDevelopers,
 			paging: {
 				limit: 8
 			}
 		});
-		developers.save = function() {
-			store.save( localDevelopers );
-			return this;
-		}
-		// TODO $.observable should support this binding, along with a less intrusive event facility
-		function bindChange(index, developer) {
-			$.observable( developer ).bind("change", function(event, ui) {
-				developers.refresh().save();
-			});
-		}
-		$.observable( localDevelopers ).bind("insert remove", function(event, ui) {
-			if ( event.type === "insert" ) {
-				$.each( ui.items, bindChange );
-			}
-			developers.refresh().save();
-		})
-		$.each( localDevelopers, bindChange );
 
 		var grid = $( "#developers-local" ).grid({
-			source: developers
+			source: developers.result
 		});
 
 		grid.gridEditor({
-			items: "td:not(:has(button))",
-			done: function() {
-				// for the navigator
-				grid.focus();
-			}
+			items: "td:not(:has(button))"
 		});
 		grid.navigator();
 
 		var developer;
 		var editForm = $( "#editForm" ).tooltip().hide().submit( function( event ) {
 			event.preventDefault();
-			$.observable(developer).property( serializeForm( this ) );
+			$.observable( developer ).property( serializeForm( this ) );
+			// TODO make the tooltip disappear when hiding the form
 			editForm.hide();
 		});
 		grid.delegate( "button.edit", "click", function() {
@@ -141,7 +121,7 @@
 </head>
 <body>
 
-<h1>Grids with editable local datasource</h1>
+<h1>Grids with editable local dataview</h1>
 
 <h2>local data source</h2>
 <p>See also <a href="grid-selectable.html">grid-selectable</a></p>

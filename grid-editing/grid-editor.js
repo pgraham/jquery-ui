@@ -20,8 +20,10 @@ $.widget( "ui.gridEditor", {
 	},
 	_create: function() {
 		var grid = this.element.data("grid");
+
 		this._bind({
 			dblclick: function( event ) {
+				var that = this;
 				var target = $( event.target ).closest( this.options.items );
 				if ( target.length && !target.data( "editor" ) ) {
 					target.editor({
@@ -31,6 +33,10 @@ $.widget( "ui.gridEditor", {
 							var object = target.closest("tr").data( "grid-item" ),
 								property = grid.options.columns[ target[ 0 ].cellIndex ].property;
 							$.observable( object ).property( property, ui.value );
+							grid.element.focus();
+						},
+						cancel: function() {
+							grid.element.focus();
 						}
 					}).editor("start");
 				}

@@ -1,20 +1,19 @@
 /*
  * Observable
  *
- * Depends on:
- * widget
  */
 (function ( $, undefined ) {
-	$.observable = function( data ) {
-		if ( !this.property ) {
-			return new $.observable( data );
-		}
-		this.data = data;
+	$.observable = function( data, parent ) {
+		return new observable( data, parent );
 	};
 
 	var splice = [].splice;
 
-	$.observable.prototype = {
+	function observable( data, parent ) {
+		this.data = data;
+		this.parent = parent;
+	}
+	observable.prototype = {
 		data: null,
 
 		_set: function( name, value ) {
@@ -51,7 +50,7 @@
 					}
 				}
 				if ( changed ) {
-					this.trigger( "change", {
+					this._trigger( "change", {
 						oldValues: oldValues,
 						newValues: newValues
 					});
@@ -67,7 +66,7 @@
 					oldValues[ path ] = oldValue;
 					var newValues = {};
 					newValues[ path ] = value;
-					this.trigger( "change", {
+					this._trigger( "change", {
 						oldValues: oldValues,
 						newValues: newValues
 					});
@@ -88,7 +87,7 @@
 			}
 			// insert( index, objects )
 			splice.apply( this.data, [ index, 0 ].concat( items ) );
-			return this.trigger( "insert", {
+			return this._trigger( "insert", {
 				index: index,
 				items: items
 			});
@@ -120,7 +119,7 @@
 					this.data.splice( removed[ i ].index - removals, 1 );
 					removals += 1;
 				}
-				return this.trigger( "remove", { items: removed } );
+				return this._trigger( "remove", { items: removed } );
 			}
 			if ( $.type( index ) === "object" ) {
 				numToRemove = 1;
@@ -139,16 +138,21 @@
 			var items = this.data.slice( index, index + numToRemove );
 			this.data.splice( index, numToRemove );
 			// TODO update event data, along with support for removing array of objects
-			return this.trigger( "remove", { index: index, items: items } );
+			return this._trigger( "remove", { index: index, items: items } );
 		},
 
-		refresh: function( newItems ) {
-			return this.trigger( "refresh" );
+		replaceAll: function( newItems ) {
+			var event = {
+				oldItems: this.data.slice(0),
+				newItems: newItems
+			};
+			splice.apply( this.data, [ 0, this.data.length ].concat( newItems ) );
+			return this._trigger( "replaceAll", event );
 		}
 	};
 
-	$.each({ bind: "bind", unbind: "unbind", trigger: "triggerHandler" }, function( from, to ) {
-		$.observable.prototype[ from ] = function() {
+	$.each({ bind: "bind", unbind: "unbind", _trigger: "triggerHandler" }, function( from, to ) {
+		observable.prototype[ from ] = function() {
 			var wrapped = $([ this.data ]);
 			wrapped[ to ].apply( wrapped, arguments );
 			return this;

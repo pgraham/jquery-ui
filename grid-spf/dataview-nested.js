@@ -1,9 +1,15 @@
+/*
+ * Nested Dataview
+ *
+ * Depends on:
+ * dataview
+ */
 (function ($, undefined ) {
 
 // TODO cache should be per-instance?
 var cache = {};
-$.widget( "ui.nestedDatasource", $.ui.datasource, {
-	widgetEventPrefix: "datasource",
+$.widget( "ui.nestedDataview", $.ui.dataview, {
+	widgetEventPrefix: "dataview",
 	options: {
 		remote: null
 	},
@@ -41,7 +47,7 @@ $.widget( "ui.nestedDatasource", $.ui.datasource, {
 
 			options.remote.refresh(function() {
 				var total = cache[ tags ].total = options.remote.totalCount;
-				var data = options.remote.toArray();
+				var data = options.remote.result;
 				for ( i = 0, length = data.length; i < length; i++ ) {
 					cache[ tags ][ start + i ] = data[ i ];
 				}
