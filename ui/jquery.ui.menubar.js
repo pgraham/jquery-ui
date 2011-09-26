@@ -80,6 +80,10 @@ $.widget( "ui.menubar", {
 				// TODO menu var is only used on two places, doesn't quite justify the .each
 				menu = input.next( "ul" );
 
+			if (menu.length == 0) {
+				that._focusable(input);
+			}
+
 			input.bind( "click.menubar focus.menubar mouseenter.menubar", function( event ) {
 				// ignore triggered focus event
 				if ( event.type == "focus" && !event.originalEvent ) {
@@ -97,7 +101,16 @@ $.widget( "ui.menubar", {
 						clearTimeout( that.timer );
 					}
 
-					that._open( event, menu );
+					if (menu.length > 0) {
+						that._open( event, menu );
+					} else {
+						that._trigger( "select", event, {
+							// Set item to be the parent of input which should be an <li/> element.  This
+							// is consistent with what item will be when select is triggered by menu
+							// items
+							item: input.parent()
+						});
+					}
 				}
 			})
 			.bind( "keydown", function( event ) {
@@ -118,7 +131,7 @@ $.widget( "ui.menubar", {
 					break;
 				}
 			})
-			.addClass( "ui-button ui-widget ui-button-text-only ui-menubar-link" )
+			.addClass( "ui-button ui-widget ui-button-text-only ui-menubar-link ui-state-default" )
 			.attr( "role", "menuitem" )
 			.attr( "aria-haspopup", "true" )
 			.wrapInner( "<span class='ui-button-text'></span>" );
@@ -140,14 +153,13 @@ $.widget( "ui.menubar", {
 			}
 
 			// TODO review if these options are a good choice, maybe they can be merged
-			if ( that.options.menuIcon ) {
-				input.addClass( "ui-state-default" ).append( "<span class='ui-button-icon-secondary ui-icon ui-icon-triangle-1-s'></span>" );
+			if ( that.options.menuIcon && menu.length > 0) {
+				input.append( "<span class='ui-button-icon-secondary ui-icon ui-icon-triangle-1-s'></span>" );
 				input.removeClass( "ui-button-text-only" ).addClass( "ui-button-text-icon-secondary" );
 			}
 
 			if ( !that.options.buttons ) {
-				// TODO ui-menubar-link is added above, not needed here?
-				input.addClass( "ui-menubar-link" ).removeClass( "ui-state-default" );
+				input.removeClass( "ui-state-default" );
 			};
 
 		});
