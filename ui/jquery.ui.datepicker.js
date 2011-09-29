@@ -996,6 +996,7 @@ $.extend(Datepicker.prototype, {
 		var dayNames = (settings ? settings.dayNames : null) || this._defaults.dayNames;
 		var monthNamesShort = (settings ? settings.monthNamesShort : null) || this._defaults.monthNamesShort;
 		var monthNames = (settings ? settings.monthNames : null) || this._defaults.monthNames;
+    var ordinalSuffixes = [ 'st', 'nd', 'rd', 'th' ];
 		var year = -1;
 		var month = -1;
 		var day = -1;
@@ -1092,6 +1093,9 @@ $.extend(Datepicker.prototype, {
 						else
 							literal = true;
 						break;
+          case 'S':
+            getName('S', ordinalSuffixes, ordinalSuffixes);
+            break;
 					default:
 						checkLiteral();
 				}
