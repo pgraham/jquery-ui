@@ -4,9 +4,10 @@
 	<meta charset="utf-8">
 	<title>Grid: Editing, Inline Grid</title>
 	<link rel="stylesheet" href="../themes/base/jquery.ui.all.css">
-	<link rel="stylesheet" href="../grid-spf/grid.css">
+	<link rel="stylesheet" href="../demos/demos.css">
 	<script src="../jquery-1.6.2.js"></script>
 	<script src="../external/globalize.js"></script>
+	<script src="../external/globalize.culture.de-DE.js"></script>
 	<script src="../external/jquery.tmpl.js"></script>
 	<script src="../external/jquery.mousewheel-3.0.4.js"></script>
 	<script src="../ui/jquery.ui.core.js"></script>
@@ -17,11 +18,11 @@
 	<script src="../ui/jquery.ui.tooltip.js"></script>
 	<script src="../ui/jquery.ui.autocomplete.js"></script>
 	<script src="../ui/jquery.ui.menu.js"></script>
-	<script src="../grid-spf/dataview.js"></script>
+	<script src="../ui/jquery.ui.dataview.js"></script>
+	<script src="../ui/jquery.ui.grid.js"></script>
+	<script src="../ui/jquery.ui.observable.js"></script>
 	<script src="../grid-spf/dataview-local.js"></script>
-	<script src="../grid-spf/grid.js"></script>
 	<script src="../grid-spf/pager.js"></script>
-	<script src="observable.js"></script>
 	<script src="editor.js"></script>
 	<script src="grid-editor.js"></script>
 	<script src="editor-countrycomplete.js"></script>
@@ -39,12 +40,16 @@
 		}
 	}
 
+	// TODO this breaks the date/time formatting
+	// need to figure out how to deal with that properly
+	// put metadata on columns, e.g. for date data-type="date" data-format="d"?
+	//Globalize.culture( "de-DE" );
+
 	var store = $.demos.localstore( {
 		key: "grid-editing-developers",
 		initial: "../grid-spf/developers.json"
 	});
 	var localDevelopers = store.load();
-
 	$(function() {
 		var developers = $.ui.localDataview({
 			input: localDevelopers,
@@ -54,6 +59,7 @@
 		});
 
 		var grid = $( "#developers-local" ).grid({
+			heightStyle: "fill",
 			source: developers.result
 		});
 
@@ -108,9 +114,6 @@
 	<style>
 		.navigator-active { background: rgba(0,0,255,0.1); }
 		.ui-autocomplete { width: 200px; max-height: 200px; overflow: auto; }
-		#developers-local {
-			width: 700px;
-		}
 		thead td { text-align: center; }
 		#pageDevelopers { text-align: center; }
 		.totals { padding-left: 1em; }
@@ -125,21 +128,32 @@
 
 <h2>local data source</h2>
 <p>See also <a href="grid-selectable.html">grid-selectable</a></p>
+
+<div style="width:80em;">
 <table id="developers-local">
+	<caption>Developers Grid</caption>
+	<colgroup>
+		<col width="12%">
+		<col width="12%">
+		<col width="12%">
+		<col width="10.34483%">
+		<col width="12%">
+		<col width="13.79310%">
+		<col width="10.34483%">
+		<col width="6.896552%">
+		<col width="10.34483%">
+	</colgroup>
 	<thead>
 		<tr>
-			<td colspan="9" class="ui-widget-header">Developers Grid</td>
-		</tr>
-		<tr>
-			<th width="70" data-property="firstName">First Name</th>
-			<th width="70" data-property="lastName">Last Name</th>
-			<th width="70" data-property="country" data-editor="countrycomplete">Country</th>
-			<th width="60" data-property="bitcoins" data-type="number" data-editor="spinner">Bitcoins</th>
-			<th width="70" data-template="#cell-date-tmpl">Date</th>
-			<th width="80" data-template="#cell-time-tmpl">Time</th>
-			<th width="60" data-property="random.value" data-type="number" data-editor="randomSpinner" data-editor-options='{"min":-1, "max": 125}'>Random</th>
-			<th width="40" data-template="#cell-edit-tmpl">Edit</th>
-			<th width="60" data-template="#cell-remove-tmpl">Remove</th>
+			<th data-property="firstName">First Name</th>
+			<th data-property="lastName">Last Name</th>
+			<th data-property="country" data-editor="countrycomplete">Country</th>
+			<th data-property="bitcoins" data-type="number" data-editor="spinner">Bitcoins</th>
+			<th data-template="#cell-date-tmpl">Date</th>
+			<th data-template="#cell-time-tmpl">Time</th>
+			<th data-property="random.value" data-type="number" data-editor="randomSpinner" data-editor-options='{"min":-1, "max": 125}'>Random</th>
+			<th data-template="#cell-edit-tmpl">Edit</th>
+			<th data-template="#cell-remove-tmpl">Remove</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -161,6 +175,7 @@
 		</tr>
 	</tfoot>
 </table>
+</div>
 
 <div>
 	<button id="addDeveloper">Insert new developer</button>

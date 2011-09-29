@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>Grid: Editing, Inline Grid</title>
 	<link rel="stylesheet" href="../themes/base/jquery.ui.all.css">
-	<link rel="stylesheet" href="../grid-spf/grid.css">
+	<link rel="stylesheet" href="../demos/demos.css">
 	<script src="../jquery-1.6.2.js"></script>
 	<script src="../external/jquery.tmpl.js"></script>
 	<script src="../external/jquery.mousewheel-3.0.4.js"></script>
@@ -14,16 +14,16 @@
 	<script src="../ui/jquery.ui.spinner.js"></script>
 	<script src="../ui/jquery.ui.position.js"></script>
 	<script src="../ui/jquery.ui.tooltip.js"></script>
-	<script src="../grid-spf/dataview.js"></script>
+	<script src="../ui/jquery.ui.dataview.js"></script>
+	<script src="../ui/jquery.ui.grid.js"></script>
+	<script src="../ui/jquery.ui.observable.js"></script>
 	<script src="../grid-spf/dataview-local.js"></script>
-	<script src="../grid-spf/grid.js"></script>
 	<script src="../grid-spf/pager.js"></script>
 	<script src="editor.js"></script>
 	<script src="grid-editor.js"></script>
 	<script src="navigator.js"></script>
 	<script src="localstore.js"></script>
 	<script src="helpers.js"></script>
-	<script src="observable.js"></script>
 	<script>
 	var store = $.demos.localstore( {
 		key: "grid-editing-developers",
@@ -71,13 +71,23 @@
 	});
 	</script>
 	<style>
+		.ui-grid input { padding: 0; }
 	</style>
 </head>
 <body>
 
 <h1>Grids with full row inline editing</h1>
 
+<div style="width:46em;">
 <table id="developers-local">
+	<colgroup>
+		<col width="19%">
+		<col width="19%">
+		<col width="18%">
+		<col width="12%">
+		<col width="12%">
+		<col width="20%">
+	</colgroup>
 	<thead>
 		<tr>
 			<th data-property="firstName">First Name</th>
@@ -91,9 +101,10 @@
 	<tbody>
 	</tbody>
 </table>
+</div>
 
 <script id="cell-edit-tmpl" type="text/x-jquery-tmpl">
-	<td><button class='edit'>Toggle Edit</button></td>
+	<td class="ui-widget-content"><button class='edit'>Toggle Edit</button></td>
 </script>
 
 </body>
