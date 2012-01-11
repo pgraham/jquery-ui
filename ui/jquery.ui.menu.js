@@ -18,12 +18,14 @@ var idIncrement = 0;
 $.widget( "ui.menu", {
 	version: "@VERSION",
 	defaultElement: "<ul>",
-	delay: 150,
+	delay: 300,
 	options: {
+		menus: "ul",
 		position: {
 			my: "left top",
 			at: "right top"
-		}
+		},
+		trigger: null
 	},
 	_create: function() {
 		this.activeMenu = this.element;
@@ -45,14 +47,20 @@ $.widget( "ui.menu", {
 				}
 			}, this));
 		this._bind({
+			// Prevent focus from sticking to links inside menu after clicking
+			// them (focus should always stay on UL during navigation).
+			"mousedown .ui-menu-item > a": function( event ) {
+				event.preventDefault();
+			},
 			"click .ui-menu-item:has(a)": function( event ) {
 				event.stopImmediatePropagation();
-				var target = $( event.currentTarget );
-				// it's possible to click an item without hovering it (#7085)
-				if ( !this.active || ( this.active[ 0 ] !== target[ 0 ] ) ) {
-					this.focus( event, target );
-				}
 				this.select( event );
+				// Redirect focus to the menu with a delay for firefox
+				this._delay( function() {
+					if ( !this.element.is(":focus") ) {
+						this.element.focus();
+					}
+				}, 20);
 			},
 			"mouseover .ui-menu-item": function( event ) {
 				event.stopImmediatePropagation();
@@ -61,13 +69,31 @@ $.widget( "ui.menu", {
 				target.siblings().children( ".ui-state-active" ).removeClass( "ui-state-active" );
 				this.focus( event, target );
 			},
-			"mouseleave": "_mouseleave",
-			"mouseleave .ui-menu": "_mouseleave",
-			"mouseout .ui-menu-item": "blur",
+			"mouseleave": "collapseAll",
+			"mouseleave .ui-menu": "collapseAll",
 			"focus": function( event ) {
-				this.focus( event, $( event.target ).children( ".ui-menu-item:first" ) );
+				var firstItem = this.element.children( ".ui-menu-item" ).eq( 0 );
+				if ( this._hasScroll() && !this.active ) {
+					var menu = this.element;
+					menu.children().each( function() {
+						var currentItem = $( this );
+						if ( currentItem.offset().top - menu.offset().top >= 0 ) {
+							firstItem = currentItem;
+							return false;
+						}
+					});
+				} else if ( this.active ) {
+					firstItem = this.active;
+				}
+				this.focus( event, firstItem );
 			},
-			"blur": "collapseAll"
+			blur: function( event ) {
+				this._delay( function() {
+					if ( ! $.contains( this.element[0], this.document[0].activeElement ) ) {
+						this.collapseAll( event );
+					}
+				}, 0);
+			}
 		});
 
 		this.refresh();
@@ -181,7 +207,7 @@ $.widget( "ui.menu", {
 			}
 		});
 
-		this._bind( document, {
+		this._bind( this.document, {
 			click: function( event ) {
 				if ( !$( event.target ).closest( ".ui-menu" ).length ) {
 					this.collapseAll( event );
@@ -194,7 +220,7 @@ $.widget( "ui.menu", {
 		//destroy (sub)menus
 		this.element
 			.removeAttr( "aria-activedescendant" )
-			.find( "ul" )
+			.find( ".ui-menu" )
 			.andSelf()
 			.removeClass( "ui-menu ui-widget ui-widget-content ui-corner-all" )
 			.removeAttr( "role" )
@@ -221,7 +247,7 @@ $.widget( "ui.menu", {
 
 	refresh: function() {
 		// initialize nested menus
-		var submenus = this.element.find( "ul:not(.ui-menu)" )
+		var submenus = this.element.find( this.options.menus + ":not( .ui-menu )" )
 			.addClass( "ui-menu ui-widget ui-widget-content ui-corner-all" )
 			.attr( "role", "menu" )
 			.hide()
@@ -230,7 +256,7 @@ $.widget( "ui.menu", {
 
 		// don't refresh list items that are already adapted
 		var menuId = this.menuId;
-		submenus.add( this.element ).children( "li:not(.ui-menu-item):has(a)" )
+		submenus.add( this.element ).children( ":not( .ui-menu-item ):has( a )" )
 			.addClass( "ui-menu-item" )
 			.attr( "role", "presentation" )
 			.children( "a" )
@@ -273,16 +299,16 @@ $.widget( "ui.menu", {
 			.children( "a" )
 				.addClass( "ui-state-focus" )
 			.end();
-		this.element.attr( "aria-activedescendant", this.active.children("a").attr("id") );
+		this.element.attr( "aria-activedescendant", this.active.children( "a" ).attr( "id" ) );
 
 		// highlight active parent menu item, if any
-		this.active.parent().closest(".ui-menu-item").children("a:first").addClass("ui-state-active");
+		this.active.parent().closest( ".ui-menu-item" ).children( "a:first" ).addClass( "ui-state-active" );
 
 		this.timer = this._delay( function() {
 			this._close();
 		}, this.delay );
 
-		var nested = $( ">ul", item );
+		var nested = $( "> .ui-menu", item );
 		if ( nested.length && ( /^mouse/.test( event.type ) ) ) {
 			this._startOpening(nested);
 		}
@@ -292,11 +318,11 @@ $.widget( "ui.menu", {
 	},
 
 	blur: function( event ) {
+		clearTimeout( this.timer );
+
 		if ( !this.active ) {
 			return;
 		}
-
-		clearTimeout( this.timer );
 
 		this.active.children( "a" ).removeClass( "ui-state-focus" );
 		this.active = null;
@@ -340,32 +366,34 @@ $.widget( "ui.menu", {
 			.position( position );
 	},
 
-	collapseAll: function( event ) {
-		var currentMenu = false;
-		if ( event ) {
-			var target = $( event.target );
-			if ( target.is( "ui.menu" ) ) {
-				currentMenu = target;
-			} else if ( target.closest( ".ui-menu" ).length ) {
-				currentMenu = target.closest( ".ui-menu" );
+	collapseAll: function( event, all ) {
+		clearTimeout( this.timer );
+		this.timer = this._delay( function() {
+			// if we were passed an event, look for the submenu that contains the event
+			var currentMenu = all ? this.element :
+				$( event && event.target ).closest( this.element.find( ".ui-menu" ) );
+
+			// if we found no valid submenu ancestor, use the main menu to close all sub menus anyway
+			if ( !currentMenu.length ) {
+				currentMenu = this.element;
 			}
-		}
 
-		this._close( currentMenu );
+			this._close( currentMenu );
 
-		if( !currentMenu ) {
 			this.blur( event );
-			this.activeMenu = this.element;
-		}
+			this.activeMenu = currentMenu;
+		}, this.delay);
 	},
 
+	// With no arguments, closes the currently active menu - if nothing is active
+	// it closes all menus.  If passed an argument, it will search for menus BELOW
 	_close: function( startMenu ) {
-		if( !startMenu ) {
+		if ( !startMenu ) {
 			startMenu = this.active ? this.active.parent() : this.element;
 		}
 
 		startMenu
-			.find( "ul" )
+			.find( ".ui-menu" )
 				.hide()
 				.attr( "aria-hidden", "true" )
 				.attr( "aria-expanded", "false" )
@@ -375,7 +403,7 @@ $.widget( "ui.menu", {
 	},
 
 	collapse: function( event ) {
-		var newItem = this.active && this.active.parents("li:not(.ui-menubar-item)").first();
+		var newItem = this.active && this.active.parent().closest( ".ui-menu-item", this.element );
 		if ( newItem && newItem.length ) {
 			this._close();
 			this.focus( event, newItem );
@@ -384,7 +412,7 @@ $.widget( "ui.menu", {
 	},
 
 	expand: function( event ) {
-		var newItem = this.active && this.active.children("ul").children("li").first();
+		var newItem = this.active && this.active.children( ".ui-menu " ).children( ".ui-menu-item" ).first();
 
 		if ( newItem && newItem.length ) {
 			this._open( newItem.parent() );
@@ -405,11 +433,11 @@ $.widget( "ui.menu", {
 		this._move( "prev", "last", event );
 	},
 
-	first: function() {
+	isFirstItem: function() {
 		return this.active && !this.active.prevAll( ".ui-menu-item" ).length;
 	},
 
-	last: function() {
+	isLastItem: function() {
 		return this.active && !this.active.nextAll( ".ui-menu-item" ).length;
 	},
 
@@ -434,15 +462,14 @@ $.widget( "ui.menu", {
 	},
 
 	nextPage: function( event ) {
+		if ( !this.active ) {
+			this.focus( event, this.activeMenu.children( ".ui-menu-item" ).first() );
+			return;
+		}
+		if ( this.isLastItem() ) {
+			return;
+		}
 		if ( this._hasScroll() ) {
-			if ( !this.active ) {
-				this.focus( event, this.activeMenu.children( ".ui-menu-item" ).first() );
-				return;
-			}
-			if ( this.last() ) {
-				return;
-			}
-
 			var base = this.active.offset().top,
 				height = this.element.height(),
 				result;
@@ -459,15 +486,14 @@ $.widget( "ui.menu", {
 	},
 
 	previousPage: function( event ) {
+		if ( !this.active ) {
+			this.focus( event, this.activeMenu.children( ".ui-menu-item" ).first() );
+			return;
+		}
+		if ( this.isFirstItem() ) {
+			return;
+		}
 		if ( this._hasScroll() ) {
-			if ( !this.active ) {
-				this.focus( event, this.activeMenu.children( ".ui-menu-item" ).first() );
-				return;
-			}
-			if ( this.first() ) {
-				return;
-			}
-
 			var base = this.active.offset().top,
 				height = this.element.height(),
 				result;
@@ -483,20 +509,16 @@ $.widget( "ui.menu", {
 	},
 
 	_hasScroll: function() {
-		return this.element.height() < this.element.prop( "scrollHeight" );
-	},
-
-	_mouseleave: function( event ) {
-		this.collapseAll( event );
-		this.blur();
+		return this.element.outerHeight() < this.element.prop( "scrollHeight" );
 	},
 
 	select: function( event ) {
+
 		// save active reference before collapseAll triggers blur
 		var ui = {
 			item: this.active
 		};
-		this.collapseAll( event );
+		this.collapseAll( event, true );
 		this._trigger( "select", event, ui );
 	}
 });

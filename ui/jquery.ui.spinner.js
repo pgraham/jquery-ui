@@ -30,6 +30,7 @@ $.widget( "ui.spinner", {
 	defaultElement: "<input>",
 	widgetEventPrefix: "spin",
 	options: {
+		culture: null,
 		incremental: true,
 		max: null,
 		min: null,
@@ -44,10 +45,26 @@ $.widget( "ui.spinner", {
 	},
 
 	_create: function() {
+		// handle string values that need to be parsed
+		this._setOption( "max", this.options.max );
+		this._setOption( "min", this.options.min );
+		this._setOption( "step", this.options.step );
+
+		// format the value, but don't constrain
 		this._value( this.element.val(), true );
+
 		this._draw();
 		this._bind( this._events );
 		this._refresh();
+
+		// turning off autocomplete prevents the browser from remembering the
+		// value when navigating through history, so we re-enable autocomplete
+		// if the page is unloaded before the widget is destroyed. #7790
+		this._bind( this.window, {
+			beforeunload: function() {
+				this.element.removeAttr( "autocomplete" );
+			}
+		});
 	},
 
 	_getCreateOptions: function() {
@@ -92,7 +109,7 @@ $.widget( "ui.spinner", {
 
 			this._spin( (delta > 0 ? 1 : -1) * this.options.step, event );
 			clearTimeout( this.mousewheelTimer );
-			this.mousewheelTimer = setTimeout(function() {
+			this.mousewheelTimer = this._delay(function() {
 				if ( this.spinning ) {
 					this._stop( event );
 				}
@@ -102,7 +119,7 @@ $.widget( "ui.spinner", {
 		"mousedown .ui-spinner-button": function( event ) {
 			// ensure focus is on (or stays on) the text field
 			event.preventDefault();
-			if ( document.activeElement !== this.element[ 0 ] ) {
+			if ( this.document[0].activeElement !== this.element[ 0 ] ) {
 				this.element.focus();
 			}
 
@@ -150,7 +167,8 @@ $.widget( "ui.spinner", {
 
 		// IE 6 doesn't understand height: 50% for the buttons
 		// unless the wrapper has an explicit height
-		if ( this.buttons.height() === uiSpinner.height() ) {
+		if ( this.buttons.height() > Math.ceil( uiSpinner.height() * 0.5 ) &&
+				uiSpinner.height() > 0 ) {
 			uiSpinner.height( uiSpinner.height() );
 		}
 
@@ -300,7 +318,20 @@ $.widget( "ui.spinner", {
 	},
 
 	_setOption: function( key, value ) {
-		this._super( "_setOption", key, value );
+		if ( key === "culture" || key === "numberFormat" ) {
+			var prevValue = this._parse( this.element.val() );
+			this.options[ key ] = value;
+			this.element.val( this._format( prevValue ) );
+			return;
+		}
+
+		if ( key === "max" || key === "min" || key === "step" ) {
+			if ( typeof value === "string" ) {
+				value = this._parse( value );
+			}
+		}
+
+		this._super( key, value );
 
 		if ( key === "disabled" ) {
 			if ( value ) {
@@ -314,13 +345,14 @@ $.widget( "ui.spinner", {
 	},
 
 	_setOptions: modifier(function( options ) {
-		this._super( "_setOptions", options );
+		this._super( options );
 		this._value( this.element.val() );
 	}),
 
 	_parse: function( val ) {
 		if ( typeof val === "string" && val !== "" ) {
-			val = window.Globalize && this.options.numberFormat ? Globalize.parseFloat( val ) : +val;
+			val = window.Globalize && this.options.numberFormat ?
+				Globalize.parseFloat( val, 10, this.options.culture ) : +val;
 		}
 		return val === "" || isNaN( val ) ? null : val;
 	},
@@ -330,7 +362,7 @@ $.widget( "ui.spinner", {
 			return "";
 		}
 		return window.Globalize && this.options.numberFormat ?
-			Globalize.format( value, this.options.numberFormat ) :
+			Globalize.format( value, this.options.numberFormat, this.options.culture ) :
 			value;
 	},
 
@@ -368,7 +400,7 @@ $.widget( "ui.spinner", {
 			.removeAttr( "aria-valuemin" )
 			.removeAttr( "aria-valuemax" )
 			.removeAttr( "aria-valuenow" );
-		this._super( "destroy" );
+		this._super();
 		this.uiSpinner.replaceWith( this.element );
 	},
 

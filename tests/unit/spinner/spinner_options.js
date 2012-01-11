@@ -2,6 +2,8 @@
 
 module( "spinner: options" );
 
+// culture is tested after numberFormat, since it depends on numberFormat
+
 test( "incremental, false", function() {
 	expect( 100 );
 
@@ -18,6 +20,7 @@ test( "incremental, false", function() {
 	for ( i = 0; i < 100; i++ ) {
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.UP } );
 	}
+	element.simulate( "keyup", { keyCode: $.ui.keyCode.UP } );
 });
 
 test( "incremental, true", function() {
@@ -45,6 +48,7 @@ test( "incremental, true", function() {
 	for ( i = 0; i < 100; i++ ) {
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.UP } );
 	}
+	element.simulate( "keyup", { keyCode: $.ui.keyCode.UP } );
 });
 
 test( "incremental, function", function() {
@@ -65,6 +69,7 @@ test( "incremental, function", function() {
 	for ( i = 0; i < 100; i++ ) {
 		element.simulate( "keydown", { keyCode: $.ui.keyCode.UP } );
 	}
+	element.simulate( "keyup", { keyCode: $.ui.keyCode.UP } );
 });
 
 test( "numberFormat, number", function() {
@@ -91,16 +96,74 @@ test( "numberFormat, currency", function() {
 	equal( element.val(), "$1.00", "formatted after step" );
 });
 
+test( "numberFormat, change", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 5 ).spinner({ numberFormat: "n1" });
+	equal( element.val(), "5.0", "formatted on init" );
+	element.spinner( "option", "numberFormat", "c" );
+	equal( element.val(), "$5.00", "formatted after change" );
+});
+
+test( "culture, null", function() {
+	expect( 2 );
+	Globalize.culture( "ja-JP" );
+	var element = $( "#spin" ).val( 0 ).spinner({ numberFormat: "C" });
+	equal( element.val(), "¥0", "formatted on init" );
+	element.spinner( "stepUp" );
+	equal( element.val(), "¥1", "formatted after step" );
+
+	// reset culture
+	Globalize.culture( "default" );
+});
+
+test( "currency, ja-JP", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 0 ).spinner({
+		numberFormat: "C",
+		culture: "ja-JP"
+	});
+	equal( element.val(), "¥0", "formatted on init" );
+	element.spinner( "stepUp" );
+	equal( element.val(), "¥1", "formatted after step" );
+});
+
+test( "currency, change", function() {
+	expect( 2 );
+	var element = $( "#spin" ).val( 5 ).spinner({
+		numberFormat: "C",
+		culture: "ja-JP"
+	});
+	equal( element.val(), "¥5", "formatted on init" );
+	element.spinner( "option", "culture", "en" );
+	equal( element.val(), "$5.00", "formatted after change" );
+});
+
 test( "max", function() {
 	expect( 3 );
 	var element = $( "#spin" ).val( 1000 ).spinner({ max: 100 });
 	equals( element.val(), 1000, "value not constrained on init" );
 
 	element.spinner( "value", 1000 );
-	equals( element.val(), 100, "max constrained if value method is greater" );
+	equals( element.val(), 100, "max constrained in value method" );
 
 	element.val( 1000 ).blur();
 	equals( element.val(), 1000, "max not constrained if manual entry" );
+});
+
+test( "max, string", function() {
+	expect( 3 );
+	var element = $( "#spin" )
+		.val( 1000 )
+		.spinner({
+			max: "$100.00",
+			numberFormat: "C",
+			culture: "en"
+		});
+	equals( element.val(), "$1,000.00", "value not constrained on init" );
+	equals( element.spinner( "option", "max" ), 100, "option converted to number" );
+
+	element.spinner( "value", 1000 );
+	equals( element.val(), "$100.00", "max constrained in value method" );
 });
 
 test( "min", function() {
@@ -109,10 +172,26 @@ test( "min", function() {
 	equals( element.val(), -1000, "value not constrained on init" );
 
 	element.spinner( "value", -1000 );
-	equals( element.val(), -100, "min constrained if value method is greater" );
+	equals( element.val(), -100, "min constrained in value method" );
 
 	element.val( -1000 ).blur();
 	equals( element.val(), -1000, "min not constrained if manual entry" );
+});
+
+test( "min, string", function() {
+	expect( 3 );
+	var element = $( "#spin" )
+		.val( -1000 )
+		.spinner({
+			min: "-$100.00",
+			numberFormat: "C",
+			culture: "en"
+		});
+	equals( element.val(), "($1,000.00)", "value not constrained on init" );
+	equals( element.spinner( "option", "min" ), -100, "option converted to number" );
+
+	element.spinner( "value", -1000 );
+	equals( element.val(), "($100.00)", "min constrained in value method")
 });
 
 test( "step, 2", function() {
@@ -138,6 +217,20 @@ test( "step, 0.7", function() {
 
 	element.spinner( "stepUp" );
 	equals( element.val(), "0.7", "stepUp" );
+});
+
+test( "step, string", function() {
+	expect( 2 );
+	var element = $("#spin").val( 0 ).spinner({
+		step: "$0.70",
+		numberFormat: "C",
+		culture: "en"
+	});
+
+	equals( element.spinner( "option", "step" ), 0.7, "option converted to number" );
+
+	element.spinner( "stepUp" );
+	equals( element.val(), "$0.70", "stepUp" );
 });
 
 })( jQuery );
