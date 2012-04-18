@@ -1,7 +1,7 @@
-/*
+/*!
  * jQuery UI Effects Slide @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -20,8 +20,8 @@ $.effects.effect.slide = function( o, done ) {
 		mode = $.effects.setMode( el, o.mode || "show" ),
 		show = mode === "show",
 		direction = o.direction || "left",
-		ref = (direction == "up" || direction == "down") ? "top" : "left",
-		positiveMotion = (direction == "up" || direction == "left"),
+		ref = (direction === "up" || direction === "down") ? "top" : "left",
+		positiveMotion = (direction === "up" || direction === "left"),
 		distance,
 		animation = {},
 		size;
@@ -44,8 +44,8 @@ $.effects.effect.slide = function( o, done ) {
 	// Animation
 	animation[ ref ] = ( show ? 
 		( positiveMotion ? "+=" : "-=") : 
-		( positiveMotion ? "-=" : "+=")) 
-		+ distance;
+		( positiveMotion ? "-=" : "+=")) +
+		distance;
 
 	// Animate
 	el.animate( animation, { 
@@ -61,7 +61,6 @@ $.effects.effect.slide = function( o, done ) {
 			done();
 		}
 	});
-
 };
 
 })(jQuery);

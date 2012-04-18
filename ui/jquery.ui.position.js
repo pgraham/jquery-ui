@@ -1,7 +1,7 @@
-/*
+/*!
  * jQuery UI Position @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -13,7 +13,7 @@ $.ui = $.ui || {};
 
 var rhorizontal = /left|center|right/,
 	rvertical = /top|center|bottom/,
-	roffset = /[+-]\d+%?/,
+	roffset = /[\+\-]\d+%?/,
 	rposition = /^\w+/,
 	rpercent = /%$/,
 	center = "center",
@@ -37,7 +37,7 @@ $.position = {
 
 		div.remove();
 
-		return w1 - w2; 
+		return w1 - w2;
 	},
 	getScrollInfo: function(within) {
 		var notWindow = within[0] !== window,
@@ -152,13 +152,13 @@ $.fn.position = function( options ) {
 		var elem = $( this ),
 			elemWidth = elem.outerWidth(),
 			elemHeight = elem.outerHeight(),
-			marginLeft = parseInt( $.curCSS( this, "marginLeft", true ) ) || 0,
-			marginTop = parseInt( $.curCSS( this, "marginTop", true ) ) || 0,
+			marginLeft = parseInt( $.css( this, "marginLeft" ), 10 ) || 0,
+			marginTop = parseInt( $.css( this, "marginTop" ), 10 ) || 0,
 			scrollInfo = $.position.getScrollInfo( within ),
 			collisionWidth = elemWidth + marginLeft +
-				( parseInt( $.curCSS( this, "marginRight", true ) ) || 0 ) + scrollInfo.width,
+				( parseInt( $.css( this, "marginRight" ), 10 ) || 0 ) + scrollInfo.width,
 			collisionHeight = elemHeight + marginTop +
-				( parseInt( $.curCSS( this, "marginBottom", true ) ) || 0 ) + scrollInfo.height,
+				( parseInt( $.css( this, "marginBottom" ), 10 ) || 0 ) + scrollInfo.height,
 			position = $.extend( {}, basePosition ),
 			myOffset = [
 				parseInt( offsets.my[ 0 ], 10 ) *
@@ -317,9 +317,10 @@ $.ui.position = {
 				isWindow = $.isWindow( data.within[0] ),
 				withinOffset = ( isWindow ? 0 : within.offset().left ) + within.scrollLeft(),
 				outerWidth = isWindow ? within.width() : within.outerWidth(),
+				offsetLeft = isWindow ? 0 : within.offset().left,
 				collisionPosLeft = position.left - data.collisionPosition.marginLeft,
-				overLeft = collisionPosLeft - withinOffset,
-				overRight = collisionPosLeft + data.collisionWidth - outerWidth - withinOffset,
+				overLeft = collisionPosLeft - offsetLeft,
+				overRight = collisionPosLeft + data.collisionWidth - outerWidth - offsetLeft,
 				left = data.my[ 0 ] === "left",
 				myOffset = data.my[ 0 ] === "left" ?
 					-data.elemWidth :
@@ -343,7 +344,7 @@ $.ui.position = {
 				}
 			}
 			else if ( overRight > 0 ) {
-				newOverLeft = position.left - data.collisionPosition.marginLeft + myOffset + atOffset + offset - withinOffset;
+				newOverLeft = position.left - data.collisionPosition.marginLeft + myOffset + atOffset + offset - offsetLeft;
 				if ( newOverLeft > 0 || Math.abs( newOverLeft ) < overRight ) {
 					data.elem
 						.addClass( "ui-flipped-left" );
@@ -365,9 +366,10 @@ $.ui.position = {
 				isWindow = $.isWindow( data.within[0] ),
 				withinOffset = ( isWindow ? 0 : within.offset().top ) + within.scrollTop(),
 				outerHeight = isWindow ? within.height() : within.outerHeight(),
+				offsetTop = isWindow ? 0 : within.offset().top,
 				collisionPosTop = position.top - data.collisionPosition.marginTop,
-				overTop = collisionPosTop - withinOffset,
-				overBottom = collisionPosTop + data.collisionHeight - outerHeight - withinOffset,
+				overTop = collisionPosTop - offsetTop,
+				overBottom = collisionPosTop + data.collisionHeight - outerHeight - offsetTop,
 				top = data.my[ 1 ] === "top",
 				myOffset = top ?
 					-data.elemHeight :
@@ -390,7 +392,7 @@ $.ui.position = {
 				}
 			}
 			else if ( overBottom > 0 ) {
-				newOverTop = position.top -  data.collisionPosition.marginTop + myOffset + atOffset + offset - withinOffset;
+				newOverTop = position.top -  data.collisionPosition.marginTop + myOffset + atOffset + offset - offsetTop;
 				if ( ( position.top + myOffset + atOffset + offset) > overBottom && ( newOverTop > 0 || Math.abs( newOverTop ) < overBottom ) ) {
 					data.elem
 						.addClass( "ui-flipped-top" );
@@ -401,12 +403,12 @@ $.ui.position = {
 		}
 	},
 	flipfit: {
-		left: function() { 
-			$.ui.position.flip.left.apply( this, arguments ); 
+		left: function() {
+			$.ui.position.flip.left.apply( this, arguments );
 			$.ui.position.fit.left.apply( this, arguments );
 		},
-		top: function() { 
-			$.ui.position.flip.top.apply( this, arguments ); 
+		top: function() {
+			$.ui.position.flip.top.apply( this, arguments );
 			$.ui.position.fit.top.apply( this, arguments );
 		}
 	}
@@ -414,8 +416,8 @@ $.ui.position = {
 
 // fraction support test
 (function () {
-	var testElement, testElementParent, testElementStyle, offsetLeft, i
-		body = document.getElementsByTagName( "body" )[ 0 ], 
+	var testElement, testElementParent, testElementStyle, offsetLeft, i,
+		body = document.getElementsByTagName( "body" )[ 0 ],
 		div = document.createElement( "div" );
 
 	//Create a "fake body" for testing based on method used in jQuery.support
@@ -429,7 +431,7 @@ $.ui.position = {
 		background: "none"
 	};
 	if ( body ) {
-		jQuery.extend( testElementStyle, {
+		$.extend( testElementStyle, {
 			position: "absolute",
 			left: "-1000px",
 			top: "-1000px"
@@ -483,7 +485,7 @@ if ( $.uiBackCompat !== false ) {
 				at: at[ 0 ] + offset[ 0 ] + " " + at[ 1 ] + offset[ 1 ],
 				offset: undefined
 			} ) );
-		}
+		};
 	}( jQuery ) );
 }
 
