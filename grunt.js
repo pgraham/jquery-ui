@@ -1,11 +1,10 @@
+/*jshint node: true */
 module.exports = function( grunt ) {
 
 var // modules
 	fs = require( "fs" ),
 	path = require( "path" ),
 	request = require( "request" ),
-	util = require( "util" ),
-	inspect = util.inspect,
 
 	// files
 	coreFiles = [
@@ -56,22 +55,37 @@ var // modules
 
 	minifyCSS = {
 		"dist/jquery-ui.min.css": "dist/jquery-ui.css"
+	},
+
+	compareFiles = {
+		all: [
+			"dist/jquery-ui.js",
+			"dist/jquery-ui.min.js"
+		]
 	};
 
+function mapMinFile( file ) {
+	return "dist/" + file.replace( /\.js$/, ".min.js" ).replace( /ui\//, "minified/" );
+}
 
 uiFiles.concat( allI18nFiles ).forEach(function( file ) {
-	minify[ "dist/" + file.replace( /\.js$/, ".min.js" ).replace( /ui\//, "minified/" ) ] = [ "<banner>", file ];
+	minify[ mapMinFile( file ) ] = [ "<banner>", file ];
 });
 
 cssFiles.forEach(function( file ) {
 	minifyCSS[ "dist/" + file.replace( /\.css$/, ".min.css" ).replace( /themes\/base\//, "themes/base/minified/" ) ] = [ "<banner>", "<strip_all_banners:" + file + ">" ];
 });
 
+uiFiles.forEach(function( file ) {
+	compareFiles[ file ] = [ file,  mapMinFile( file ) ];
+});
 
 // csslint and cssmin tasks
 grunt.loadNpmTasks( "grunt-css" );
 // file size comparison tasks
 grunt.loadNpmTasks( "grunt-compare-size" );
+// html validation task
+grunt.loadNpmTasks( "grunt-html" );
 
 grunt.registerHelper( "strip_all_banners", function( filepath ) {
 	return grunt.file.read( filepath ).replace( /^\s*\/\*[\s\S]*?\*\/\s*/g, "" );
@@ -115,12 +129,7 @@ grunt.initConfig({
 		bannerI18n: createBanner( allI18nFiles ),
 		bannerCSS: createBanner( cssFiles )
 	},
-	compare_size: {
-		files: [
-			"dist/jquery-ui.js",
-			"dist/jquery-ui.min.js"
-		]
-	},
+	compare_size: compareFiles,
 	concat: {
 		ui: {
 			src: [ "<banner:meta.bannerAll>", stripBanner( uiFiles ) ],
@@ -137,6 +146,12 @@ grunt.initConfig({
 	},
 	min: minify,
 	cssmin: minifyCSS,
+	htmllint: {
+		// ignore files that contain invalid html, used only for ajax content testing
+		all: grunt.file.expand( [ "demos/**/*.html", "tests/**/*.html" ] ).filter(function( file ) {
+			return !/(?:ajax\/content\d\.html|tabs\/data\/test\.html|tests\/unit\/core\/core\.html)/.test( file );
+		})
+	},
 	copy: {
 		dist: {
 			src: [
@@ -172,6 +187,11 @@ grunt.initConfig({
 			src: "dist/themes/base/minified/*.css",
 			strip: /^dist/,
 			dest: "dist/<%= files.dist %>"
+		},
+		dist_units_images: {
+			src: "themes/base/images/*",
+			strip: /^themes\/base\//,
+			dest: "dist/"
 		},
 		dist_min_images: {
 			src: "themes/base/images/*",
@@ -269,11 +289,10 @@ grunt.initConfig({
 	lint: {
 		ui: grunt.file.expandFiles( "ui/*.js" ).filter(function( file ) {
 			// TODO remove items from this list once rewritten
-			return !( /(effects.core|mouse|datepicker|draggable|droppable|resizable|selectable|sortable)\.js$/ ).test( file );
+			return !( /(mouse|datepicker|draggable|droppable|resizable|selectable|sortable)\.js$/ ).test( file );
 		}),
-		grunt: "grunt.js"
-		// TODO enabled once fixed up
-		// tests: "tests/unit/**/*.js"
+		grunt: "grunt.js",
+		tests: "tests/unit/**/*.js"
 	},
 	csslint: {
 		// nothing: []
@@ -294,74 +313,94 @@ grunt.initConfig({
 		}
 	},
 	jshint: (function() {
-		var defaults = {
-			curly: true,
-			eqnull: true,
-			eqeqeq: true,
-			expr: true,
-			latedef: true,
-			noarg: true,
-			onevar: true,
-			// TODO: limit to multi-line comments https://github.com/jshint/jshint/issues/503
-			smarttabs: true,
-			// TODO: use "faux strict mode" https://github.com/jshint/jshint/issues/504
-			// strict: true,
-			// TODO: enable trailing
-			// trailing: true,
-			undef: true
-		};
+		function parserc( path ) {
+			var rc = grunt.file.readJSON( (path || "") + ".jshintrc" ),
+				settings = {
+					options: rc,
+					globals: {}
+				};
 
-		function extend( a, b ) {
-			for ( var prop in b ) {
-				a[ prop ] = b[ prop ];
-			}
-			return a;
+			(rc.predef || []).forEach(function( prop ) {
+				settings.globals[ prop ] = true;
+			});
+			delete rc.predef;
+
+			return settings;
 		}
 
 		return {
-			options: defaults,
-			grunt: {
-				options: extend({
-					node: true
-				}, defaults ),
-				globals: {
-					task: true,
-					config: true,
-					file: true,
-					log: true,
-					template: true
-				}
-			},
-			ui: {
-				options: extend({
-					browser: true,
-					jquery: true
-				}, defaults ),
-				globals: {
-					Globalize: true
-				}
-			},
-			tests: {
-				options: extend({
-					browser: true,
-					jquery: true
-				}, defaults ),
-				globals: {
-					module: true,
-					test: true,
-					ok: true,
-					equal: true,
-					deepEqual: true,
-					QUnit: true
-				}
-			}
+			// TODO: use "faux strict mode" https://github.com/jshint/jshint/issues/504
+			// TODO: limit `smarttabs` to multi-line comments https://github.com/jshint/jshint/issues/503
+			options: parserc(),
+			ui: parserc( "ui/" ),
+			// TODO: `evil: true` is only for document.write() https://github.com/jshint/jshint/issues/519
+			// TODO: don't create so many globals in tests
+			tests: parserc( "tests/" )
 		};
 	})()
 });
 
+grunt.registerTask( "testswarm", function( commit, configFile ) {
+	var test,
+		testswarm = require( "testswarm" ),
+		testBase = "http://swarm.jquery.org/git/jquery-ui/" + commit + "/tests/unit/",
+		testUrls = [],
+		tests = {
+			"Accordion": "accordion/accordion.html",
+			"Accordion_deprecated": "accordion/accordion_deprecated.html",
+			"Autocomplete": "autocomplete/autocomplete.html",
+			"Button": "button/button.html",
+			"Core": "core/core.html",
+			//"datepicker/datepicker.html",
+			//"dialog/dialog.html",
+			//"draggable/draggable.html",
+			//"droppable/droppable.html",
+			"Effects": "effects/effects.html",
+			"Menu": "menu/menu.html",
+			"Position": "position/position.html",
+			"Position_deprecated": "position/position_deprecated.html",
+			"Progressbar": "progressbar/progressbar.html",
+			//"resizable/resizable.html",
+			//"selectable/selectable.html",
+			//"slider/slider.html",
+			//"sortable/sortable.html",
+			"Spinner": "spinner/spinner.html",
+			"Tabs": "tabs/tabs.html",
+			"Tabs_deprecated": "tabs/tabs_deprecated.html",
+			"Tooltip": "tooltip/tooltip.html",
+			"Widget": "widget/widget.html"
+		};
+	for ( test in tests ) {
+		testUrls.push( testBase + tests[ test ] + "?nojshint=true" );
+	}
+	testswarm({
+		url: "http://swarm.jquery.org/",
+		pollInterval: 10000,
+		timeout: 1000 * 60 * 30,
+		done: this.async()
+	}, {
+		authUsername: "jqueryui",
+		authToken: grunt.file.readJSON( configFile ).jqueryui.authToken,
+		jobName: 'jQuery UI commit #<a href="https://github.com/jquery/jquery-ui/commit/' + commit + '">' + commit.substr( 0, 10 ) + '</a>',
+		runMax: 3,
+		"runNames[]": Object.keys(tests),
+		"runUrls[]": testUrls,
+		"browserSets[]": ["popular"]
+	});
+});
+
 grunt.registerMultiTask( "copy", "Copy files to destination folder and replace @VERSION with pkg.version", function() {
 	function replaceVersion( source ) {
-		return source.replace( "@VERSION", grunt.config( "pkg.version" ) );
+		return source.replace( /@VERSION/g, grunt.config( "pkg.version" ) );
+	}
+	function copyFile( src, dest ) {
+		if ( /(js|css)$/.test( src ) ) {
+			grunt.file.copy( src, dest, {
+				process: replaceVersion
+			});
+		} else {
+			grunt.file.copy( src, dest );
+		}
 	}
 	var files = grunt.file.expandFiles( this.file.src ),
 		target = this.file.dest + "/",
@@ -373,18 +412,12 @@ grunt.registerMultiTask( "copy", "Copy files to destination folder and replace @
 	}
 	files.forEach(function( fileName ) {
 		var targetFile = strip ? fileName.replace( strip, "" ) : fileName;
-		if ( /(js|css)$/.test( fileName ) ) {
-			grunt.file.copy( fileName, target + targetFile, {
-				process: replaceVersion
-			});
-		} else {
-			grunt.file.copy( fileName, target + targetFile );
-		}
+		copyFile( fileName, target + targetFile );
 	});
 	grunt.log.writeln( "Copied " + files.length + " files." );
 	for ( fileName in this.data.renames ) {
 		renameCount += 1;
-		grunt.file.copy( fileName, target + grunt.template.process( this.data.renames[ fileName ], grunt.config() ) );
+		copyFile( fileName, target + grunt.template.process( this.data.renames[ fileName ], grunt.config() ) );
 	}
 	if ( renameCount ) {
 		grunt.log.writeln( "Renamed " + renameCount + " files." );
@@ -539,9 +572,34 @@ grunt.registerTask( "clean", function() {
 	require( "rimraf" ).sync( "dist" );
 });
 
-grunt.registerTask( "default", "lint csslint qunit build compare_size" );
-grunt.registerTask( "sizer", "concat:ui min:dist/jquery-ui.min.js compare_size" );
-grunt.registerTask( "build", "concat min cssmin" );
+grunt.registerTask( "authors", function() {
+	var done = this.async();
+
+	grunt.utils.spawn({
+		cmd: "git",
+		args: [ "log", "--pretty=%an <%ae>" ]
+	}, function( err, result ) {
+		if ( err ) {
+			grunt.log.error( err );
+			return done( false );
+		}
+
+		var authors,
+			tracked = {};
+		authors = result.split( "\n" ).reverse().filter(function( author ) {
+			var first = !tracked[ author ];
+			tracked[ author ] = true;
+			return first;
+		}).join( "\n" );
+		grunt.log.writeln( authors );
+		done();
+	});
+});
+
+grunt.registerTask( "default", "lint csslint htmllint qunit" );
+grunt.registerTask( "sizer", "concat:ui min:dist/jquery-ui.min.js compare_size:all" );
+grunt.registerTask( "sizer_all", "concat:ui min compare_size" );
+grunt.registerTask( "build", "concat min cssmin copy:dist_units_images" );
 grunt.registerTask( "release", "clean build copy:dist copy:dist_min copy:dist_min_images copy:dist_css_min md5:dist zip:dist" );
 grunt.registerTask( "release_themes", "release download_themes copy_themes copy:themes md5:themes zip:themes" );
 grunt.registerTask( "release_cdn", "release_themes copy:cdn copy:cdn_min copy:cdn_i18n copy:cdn_i18n_min copy:cdn_min_images copy:cdn_themes md5:cdn zip:cdn" );

@@ -12,10 +12,11 @@
  *	jquery.ui.widget.js
  */
 (function( $, undefined ) {
-	var uid = 0,
-		hideProps = {},
-		showProps = {},
-		showPropsAdjust = {};
+
+var uid = 0,
+	hideProps = {},
+	showProps = {},
+	showPropsAdjust = {};
 
 hideProps.height = hideProps.paddingTop = hideProps.paddingBottom =
 	hideProps.borderTopWidth = hideProps.borderBottomWidth = "hide";
@@ -62,7 +63,8 @@ $.widget( "ui.accordion", {
 		this._focusable( this.headers );
 
 		this.headers.next()
-			.addClass( "ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" );
+			.addClass( "ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" )
+			.hide();
 
 		// don't allow collapsible: false and active: false
 		if ( !options.collapsible && options.active === false ) {
@@ -75,7 +77,9 @@ $.widget( "ui.accordion", {
 		this.active = this._findActive( options.active )
 			.addClass( "ui-accordion-header-active ui-state-active" )
 			.toggleClass( "ui-corner-all ui-corner-top" );
-		this.active.next().addClass( "ui-accordion-content-active" );
+		this.active.next()
+			.addClass( "ui-accordion-content-active" )
+			.show();
 
 		this._createIcons();
 		this.originalHeight = this.element[0].style.height;
@@ -166,8 +170,7 @@ $.widget( "ui.accordion", {
 	},
 
 	_destroy: function() {
-		var contents,
-			accordionId = this.accordionId;
+		var contents;
 
 		// clean up main element
 		this.element
@@ -290,10 +293,9 @@ $.widget( "ui.accordion", {
 	},
 
 	refresh: function() {
-		var heightStyle = this.options.heightStyle,
-			parent = this.element.parent(),
-			maxHeight,
-			overflow;
+		var maxHeight, overflow,
+			heightStyle = this.options.heightStyle,
+			parent = this.element.parent();
 
 		this.element.css( "height", this.originalHeight );
 
@@ -387,9 +389,9 @@ $.widget( "ui.accordion", {
 			toHide = active.next(),
 			eventData = {
 				oldHeader: active,
-				oldContent: toHide,
+				oldPanel: toHide,
 				newHeader: collapsing ? $() : clicked,
-				newContent: toShow
+				newPanel: toShow
 			};
 
 		event.preventDefault();
@@ -410,9 +412,8 @@ $.widget( "ui.accordion", {
 		this._toggle( eventData );
 
 		// switch classes
-		active
-			.removeClass( "ui-accordion-header-active ui-state-active ui-corner-top" )
-			.addClass( "ui-corner-all" );
+		// corner classes on the previously active header stay after the animation
+		active.removeClass( "ui-accordion-header-active ui-state-active" );
 		if ( options.icons ) {
 			active.children( ".ui-accordion-header-icon" )
 				.removeClass( options.icons.activeHeader )
@@ -436,8 +437,8 @@ $.widget( "ui.accordion", {
 	},
 
 	_toggle: function( data ) {
-		var toShow = data.newContent,
-			toHide = this.prevShow.length ? this.prevShow : data.oldContent;
+		var toShow = data.newPanel,
+			toHide = this.prevShow.length ? this.prevShow : data.oldPanel;
 
 		// handle activating a panel during the animation for another activation
 		this.prevShow.add( this.prevHide ).stop( true, true );
@@ -452,16 +453,23 @@ $.widget( "ui.accordion", {
 			this._toggleComplete( data );
 		}
 
-		toHide
-			.attr({
-				"aria-expanded": "false",
-				"aria-hidden": "true"
+		toHide.attr({
+			"aria-expanded": "false",
+			"aria-hidden": "true"
+		});
+		toHide.prev().attr( "aria-selected", "false" );
+		// if we're switching panels, remove the old header from the tab order
+		// if we're opening from collapsed state, remove the previous header from the tab order
+		// if we're collapsing, then keep the collapsing header in the tab order
+		if ( toShow.length && toHide.length ) {
+			toHide.prev().attr( "tabIndex", -1 );
+		} else if ( toShow.length ) {
+			this.headers.filter(function() {
+				return $( this ).attr( "tabIndex" ) === 0;
 			})
-			.prev()
-				.attr({
-					"aria-selected": "false",
-					tabIndex: -1
-				});
+			.attr( "tabIndex", -1 );
+		}
+
 		toShow
 			.attr({
 				"aria-expanded": "true",
@@ -496,10 +504,10 @@ $.widget( "ui.accordion", {
 		easing = easing || options.easing || animate.easing;
 		duration = duration || options.duration || animate.duration;
 
-		if ( !toHide.size() ) {
+		if ( !toHide.length ) {
 			return toShow.animate( showProps, duration, easing, complete );
 		}
-		if ( !toShow.size() ) {
+		if ( !toShow.length ) {
 			return toHide.animate( hideProps, duration, easing, complete );
 		}
 
@@ -516,11 +524,14 @@ $.widget( "ui.accordion", {
 	},
 
 	_toggleComplete: function( data ) {
-		var toShow = data.newContent,
-			toHide = data.oldContent;
+		var toHide = data.oldPanel;
 
-		// other classes are removed before the animation; this one needs to stay until completed
-		toHide.removeClass( "ui-accordion-content-active" );
+		toHide
+			.removeClass( "ui-accordion-content-active" )
+			.prev()
+				.removeClass( "ui-corner-top" )
+				.addClass( "ui-corner-all" );
+
 		// Work around for rendering bug in IE (#5421)
 		if ( toHide.length ) {
 			toHide.parent()[0].className = toHide.parent()[0].className;
@@ -665,9 +676,19 @@ if ( $.uiBackCompat !== false ) {
 			}
 
 			if ( type === "beforeActivate" ) {
-				ret = _trigger.call( this, "changestart", event, data );
+				ret = _trigger.call( this, "changestart", event, {
+					oldHeader: data.oldHeader,
+					oldContent: data.oldPanel,
+					newHeader: data.newHeader,
+					newContent: data.newPanel
+				});
 			} else if ( type === "activate" ) {
-				ret = _trigger.call( this, "change", event, data );
+				ret = _trigger.call( this, "change", event, {
+					oldHeader: data.oldHeader,
+					oldContent: data.oldPanel,
+					newHeader: data.newHeader,
+					newContent: data.newPanel
+				});
 			}
 			return ret;
 		};
