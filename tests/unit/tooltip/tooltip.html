@@ -4,20 +4,24 @@
 	<meta charset="utf-8">
 	<title>jQuery UI Tooltip Test Suite</title>
 
-	<link rel="stylesheet" href="../../../themes/base/jquery.ui.tooltip.css">
-
 	<script src="../../jquery.js"></script>
-	<script src="../../../ui/jquery.ui.core.js"></script>
-	<script src="../../../ui/jquery.ui.widget.js"></script>
-	<script src="../../../ui/jquery.ui.position.js"></script>
-	<script src="../../../ui/jquery.ui.tooltip.js"></script>
-
 	<link rel="stylesheet" href="../../../external/qunit.css">
 	<script src="../../../external/qunit.js"></script>
 	<script src="../../jquery.simulate.js"></script>
 	<script src="../testsuite.js"></script>
+	<script>
+	TestHelpers.loadResources({
+		css: [ "ui.core", "ui.tooltip" ],
+		js: [
+			"ui/jquery.ui.core.js",
+			"ui/jquery.ui.widget.js",
+			"ui/jquery.ui.position.js",
+			"ui/jquery.ui.tooltip.js"
+		]
+	});
+	</script>
 
-	<script src="tooltip_defaults.js"></script>
+	<script src="tooltip_common.js"></script>
 	<script src="tooltip_core.js"></script>
 	<script src="tooltip_events.js"></script>
 	<script src="tooltip_methods.js"></script>
@@ -37,6 +41,7 @@
 <div>
 	<a id="tooltipped1" href="#" title="anchortitle">anchor</a>
 	<input title="inputtitle">
+	<span id="multiple-describedby" aria-describedby="fixture-span" title="...">aria-describedby</span>
 	<span id="fixture-span" title="title-text">span</span>
 </div>
 

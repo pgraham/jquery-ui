@@ -16,11 +16,12 @@ test( "destroy", function() {
 test( "open/close", function() {
 	expect( 3 );
 	$.fx.off = true;
-	var element = $( "#tooltipped1" ).tooltip();
+	var tooltip,
+		element = $( "#tooltipped1" ).tooltip();
 	equal( $( ".ui-tooltip" ).length, 0, "no tooltip on init" );
 
 	element.tooltip( "open" );
-	var tooltip = $( "#" + element.attr( "aria-describedby" ) );
+	tooltip = $( "#" + element.data( "ui-tooltip-id" ) );
 	ok( tooltip.is( ":visible" ) );
 
 	element.tooltip( "close" );
@@ -31,11 +32,12 @@ test( "open/close", function() {
 test( "enable/disable", function() {
 	expect( 7 );
 	$.fx.off = true;
-	var element = $( "#tooltipped1" ).tooltip();
+	var tooltip,
+		element = $( "#tooltipped1" ).tooltip();
 	equal( $( ".ui-tooltip" ).length, 0, "no tooltip on init" );
 
 	element.tooltip( "open" );
-	var tooltip = $( "#" + element.attr( "aria-describedby" ) );
+	tooltip = $( "#" + element.data( "ui-tooltip-id" ) );
 	ok( tooltip.is( ":visible" ) );
 
 	element.tooltip( "disable" );
@@ -49,7 +51,7 @@ test( "enable/disable", function() {
 	equal( element.attr( "title" ), "anchortitle", "title restored on enable" );
 
 	element.tooltip( "open" );
-	tooltip = $( "#" + element.attr( "aria-describedby" ) );
+	tooltip = $( "#" + element.data( "ui-tooltip-id" ) );
 	ok( tooltip.is( ":visible" ) );
 	$.fx.off = false;
 });
@@ -59,8 +61,8 @@ TODO currently tooltip doesn't override widget
 can't return anything useful if no element is kept around and there's no useful reference
 test("widget", function() {
 	var tooltip = $("#tooltipped1").tooltip();
-	same(tooltip.tooltip("widget")[0], $(".ui-tooltip")[0]);
-	same(tooltip.tooltip("widget").end()[0], tooltip[0]);
+	deepEqual(tooltip.tooltip("widget")[0], $(".ui-tooltip")[0]);
+	deepEqual(tooltip.tooltip("widget").end()[0], tooltip[0]);
 });
 */
 

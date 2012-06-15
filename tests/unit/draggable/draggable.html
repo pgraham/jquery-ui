@@ -5,18 +5,24 @@
 	<title>jQuery UI Draggable Test Suite</title>
 
 	<script src="../../jquery.js"></script>
-	<script src="../../../ui/jquery.ui.core.js"></script>
-	<script src="../../../ui/jquery.ui.widget.js"></script>
-	<script src="../../../ui/jquery.ui.mouse.js"></script>
-	<script src="../../../ui/jquery.ui.draggable.js"></script>
-
 	<link rel="stylesheet" href="../../../external/qunit.css">
 	<script src="../../../external/qunit.js"></script>
 	<script src="../../jquery.simulate.js"></script>
 	<script src="../testsuite.js"></script>
+	<script>
+	TestHelpers.loadResources({
+		css: [ "ui.core" ],
+		js: [
+			"ui/jquery.ui.core.js",
+			"ui/jquery.ui.widget.js",
+			"ui/jquery.ui.mouse.js",
+			"ui/jquery.ui.draggable.js"
+		]
+	});
+	</script>
 
+	<script src="draggable_common.js"></script>
 	<script src="draggable_core.js"></script>
-	<script src="draggable_defaults.js"></script>
 	<script src="draggable_events.js"></script>
 	<script src="draggable_methods.js"></script>
 	<script src="draggable_options.js"></script>

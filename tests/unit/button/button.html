@@ -4,21 +4,24 @@
 	<meta charset="utf-8">
 	<title>jQuery UI Button Test Suite</title>
 
-	<link rel="stylesheet" href="../../../themes/base/jquery.ui.core.css">
-	<link rel="stylesheet" href="../../../themes/base/jquery.ui.button.css">
-
 	<script src="../../jquery.js"></script>
-	<script src="../../../ui/jquery.ui.core.js"></script>
-	<script src="../../../ui/jquery.ui.widget.js"></script>
-	<script src="../../../ui/jquery.ui.button.js"></script>
-
 	<link rel="stylesheet" href="../../../external/qunit.css">
 	<script src="../../../external/qunit.js"></script>
 	<script src="../../jquery.simulate.js"></script>
 	<script src="../testsuite.js"></script>
+	<script>
+	TestHelpers.loadResources({
+		css: [ "ui.core", "ui.button" ],
+		js: [
+			"ui/jquery.ui.core.js",
+			"ui/jquery.ui.widget.js",
+			"ui/jquery.ui.button.js"
+		]
+	});
+	</script>
 
+	<script src="button_common.js"></script>
 	<script src="button_core.js"></script>
-	<script src="button_defaults.js"></script>
 	<script src="button_events.js"></script>
 	<script src="button_methods.js"></script>
 	<script src="button_options.js"></script>

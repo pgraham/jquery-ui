@@ -5,7 +5,7 @@
 
 var el, offsetBefore, offsetAfter, dragged;
 
-var drag = function(handle, dx, dy) {
+function drag(handle, dx, dy) {
 	offsetBefore = $(handle).offset();
 	$(handle).simulate("drag", {
 		dx: dx || 0,
@@ -15,9 +15,9 @@ var drag = function(handle, dx, dy) {
 	offsetAfter = $(handle).offset();
 }
 
-var sort = function(handle, dx, dy, index, msg) {
+function sort(handle, dx, dy, index, msg) {
 	drag(handle, dx, dy);
-	equals($(handle).parent().children().index(handle), index, msg);
+	equal($(handle).parent().children().index(handle), index, msg);
 }
 
 module("sortable: tickets");
@@ -32,7 +32,7 @@ test("#3019: Stop fires too early", function() {
 	});
 
 	sort($("li", el)[0], 0, 40, 2, 'Dragging the sortable');
-	equals(helper, null, "helper should be false");
+	equal(helper, null, "helper should be false");
 
 });
 

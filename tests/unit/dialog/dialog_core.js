@@ -40,9 +40,9 @@ function drag(handle, dx, dy) {
 
 function moved(dx, dy, msg) {
 	msg = msg ? msg + "." : "";
-	var actual = { left: Math.round(offsetAfter.left), top: Math.round(offsetAfter.top) };
-	var expected = { left: Math.round(offsetBefore.left + dx), top: Math.round(offsetBefore.top + dy) };
-	same(actual, expected, 'dragged[' + dragged.dx + ', ' + dragged.dy + '] ' + msg);
+	var actual = { left: Math.round(offsetAfter.left), top: Math.round(offsetAfter.top) },
+		expected = { left: Math.round(offsetBefore.left + dx), top: Math.round(offsetBefore.top + dy) };
+	deepEqual(actual, expected, 'dragged[' + dragged.dx + ', ' + dragged.dy + '] ' + msg);
 }
 
 function shouldmove(why) {
@@ -59,9 +59,9 @@ function shouldnotmove(why) {
 
 function resized(dw, dh, msg) {
 	msg = msg ? msg + "." : "";
-	var actual = { width: widthAfter, height: heightAfter };
-	var expected = { width: widthBefore + dw, height: heightBefore + dh };
-	same(actual, expected, 'resized[' + dragged.dx + ', ' + dragged.dy + '] ' + msg);
+	var actual = { width: widthAfter, height: heightAfter },
+		expected = { width: widthBefore + dw, height: heightBefore + dh };
+	deepEqual(actual, expected, 'resized[' + dragged.dx + ', ' + dragged.dy + '] ' + msg);
 }
 
 function shouldresize(why) {
@@ -89,26 +89,11 @@ function margin(el, side) {
 module("dialog: core");
 
 test("title id", function() {
-	expect(3);
-
-	var titleId;
-
-	// reset the uuid so we know what values to expect
-	$.ui.dialog.uuid = 0;
+	expect(1);
 
 	el = $('<div></div>').dialog();
-	titleId = dlg().find('.ui-dialog-title').attr('id');
-	equals(titleId, 'ui-dialog-title-1', 'auto-numbered title id');
-	el.remove();
-
-	el = $('<div></div>').dialog();
-	titleId = dlg().find('.ui-dialog-title').attr('id');
-	equals(titleId, 'ui-dialog-title-2', 'auto-numbered title id');
-	el.remove();
-
-	el = $('<div id="foo">').dialog();
-	titleId = dlg().find('.ui-dialog-title').attr('id');
-	equals(titleId, 'ui-dialog-title-foo', 'carried over title id');
+	var titleId = dlg().find('.ui-dialog-title').attr('id');
+	ok( /ui-id-\d+$/.test( titleId ), 'auto-numbered title id');
 	el.remove();
 });
 
@@ -117,14 +102,14 @@ test("ARIA", function() {
 
 	el = $('<div></div>').dialog();
 
-	equals(dlg().attr('role'), 'dialog', 'dialog role');
+	equal(dlg().attr('role'), 'dialog', 'dialog role');
 
 	var labelledBy = dlg().attr('aria-labelledby');
 	ok(labelledBy.length > 0, 'has aria-labelledby attribute');
-	equals(dlg().find('.ui-dialog-title').attr('id'), labelledBy,
+	equal(dlg().find('.ui-dialog-title').attr('id'), labelledBy,
 		'proper aria-labelledby attribute');
 
-	equals(dlg().find('.ui-dialog-titlebar-close').attr('role'), 'button',
+	equal(dlg().find('.ui-dialog-titlebar-close').attr('role'), 'button',
 		'close link role');
 
 	el.remove();
@@ -132,7 +117,7 @@ test("ARIA", function() {
 
 test("widget method", function() {
 	var dialog = $("<div>").appendTo("#main").dialog();
-	same(dialog.parent()[0], dialog.dialog("widget")[0]);
+	deepEqual(dialog.parent()[0], dialog.dialog("widget")[0]);
 });
 
 })(jQuery);

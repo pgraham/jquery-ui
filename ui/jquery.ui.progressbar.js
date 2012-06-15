@@ -1,7 +1,7 @@
-/*
+/*!
  * jQuery UI Progressbar @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -68,7 +68,7 @@ $.widget( "ui.progressbar", {
 			}
 		}
 
-		this._super( "_setOption", key, value );
+		this._super( key, value );
 	},
 
 	_value: function() {
@@ -85,8 +85,8 @@ $.widget( "ui.progressbar", {
 	},
 
 	_refreshValue: function() {
-		var value = this.value();
-		var percentage = this._percentage();
+		var value = this.value(),
+			percentage = this._percentage();
 
 		if ( this.oldValue !== value ) {
 			this.oldValue = value;

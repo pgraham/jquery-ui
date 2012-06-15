@@ -1,7 +1,7 @@
-/*
+/*!
  * jQuery UI Droppable @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -47,18 +47,13 @@ $.widget("ui.droppable", {
 
 	},
 
-	destroy: function() {
+	_destroy: function() {
 		var drop = $.ui.ddmanager.droppables[this.options.scope];
 		for ( var i = 0; i < drop.length; i++ )
 			if ( drop[i] == this )
 				drop.splice(i, 1);
 
-		this.element
-			.removeClass("ui-droppable ui-droppable-disabled")
-			.removeData("droppable")
-			.unbind(".droppable");
-
-		return this;
+		this.element.removeClass("ui-droppable ui-droppable-disabled");
 	},
 
 	_setOption: function(key, value) {
@@ -224,7 +219,7 @@ $.ui.ddmanager = {
 
 			if(!this.options) return;
 			if (!this.options.disabled && this.visible && $.ui.intersect(draggable, this, this.options.tolerance))
-				dropped = dropped || this._drop.call(this, event);
+				dropped = this._drop.call(this, event) || dropped;
 
 			if (!this.options.disabled && this.visible && this.accept.call(this.element[0],(draggable.currentItem || draggable.element))) {
 				this.isout = 1; this.isover = 0;

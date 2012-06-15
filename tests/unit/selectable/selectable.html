@@ -5,18 +5,24 @@
 	<title>jQuery UI Selectable Test Suite</title>
 
 	<script src="../../jquery.js"></script>
-	<script src="../../../ui/jquery.ui.core.js"></script>
-	<script src="../../../ui/jquery.ui.widget.js"></script>
-	<script src="../../../ui/jquery.ui.mouse.js"></script>
-	<script src="../../../ui/jquery.ui.selectable.js"></script>
-
 	<link rel="stylesheet" href="../../../external/qunit.css">
 	<script src="../../../external/qunit.js"></script>
 	<script src="../../jquery.simulate.js"></script>
 	<script src="../testsuite.js"></script>
+	<script>
+	TestHelpers.loadResources({
+		css: [ "ui.core", "ui.selectable" ],
+		js: [
+			"ui/jquery.ui.core.js",
+			"ui/jquery.ui.widget.js",
+			"ui/jquery.ui.mouse.js",
+			"ui/jquery.ui.selectable.js"
+		]
+	});
+	</script>
 
+	<script src="selectable_common.js"></script>
 	<script src="selectable_core.js"></script>
-	<script src="selectable_defaults.js"></script>
 	<script src="selectable_events.js"></script>
 	<script src="selectable_methods.js"></script>
 	<script src="selectable_options.js"></script>

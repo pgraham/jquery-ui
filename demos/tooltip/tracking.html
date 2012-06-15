@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>jQuery UI Tooltip - Track the mouse</title>
 	<link rel="stylesheet" href="../../themes/base/jquery.ui.all.css">
-	<script src="../../jquery-1.6.2.js"></script>
+	<script src="../../jquery-1.7.2.js"></script>
 	<script src="../../ui/jquery.ui.core.js"></script>
 	<script src="../../ui/jquery.ui.widget.js"></script>
 	<script src="../../ui/jquery.ui.position.js"></script>
@@ -19,22 +19,7 @@
 	<script>
 	$(function() {
 		$( ".demo" ).tooltip({
-			open: function( event ) {
-				var tooltip = $( ".ui-tooltip" );
-				function position( event ) {
-					tooltip.position({
-						my: "left+25 center",
-						at: "right+25 center",
-						of: event
-					});
-				}
-				$( document ).bind( "mousemove.tooltip-position", position );
-				// trigger once to override element-relative positioning
-				position( event );
-			},
-			close: function() {
-				$( document ).unbind( "mousemove.tooltip-position" );
-			}
+			track: true
 		});
 	});
 	</script>

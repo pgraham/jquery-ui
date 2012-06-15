@@ -1,7 +1,7 @@
-/*
+/*!
  * jQuery UI Effects Fold @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -23,11 +23,12 @@ $.effects.effect.fold = function( o, done ) {
 		size = o.size || 15,
 		percent = /([0-9]+)%/.exec( size ),
 		horizFirst = !!o.horizFirst,
-		widthFirst = show != horizFirst,
+		widthFirst = show !== horizFirst,
 		ref = widthFirst ? [ "width", "height" ] : [ "height", "width" ],
 		duration = o.duration / 2,
 		wrapper, distance,
-		animation1 = {}, animation2 = {};
+		animation1 = {},
+		animation2 = {};
 
 	$.effects.save( el, props );
 	el.show();
