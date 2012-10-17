@@ -3,11 +3,13 @@
 module( "tooltip: options" );
 
 test( "content: default", function() {
+	expect( 1 );
 	var element = $( "#tooltipped1" ).tooltip().tooltip( "open" );
 	deepEqual( $( "#" + element.data( "ui-tooltip-id" ) ).text(), "anchortitle" );
 });
 
 test( "content: return string", function() {
+	expect( 1 );
 	var element = $( "#tooltipped1" ).tooltip({
 		content: function() {
 			return "customstring";
@@ -17,6 +19,7 @@ test( "content: return string", function() {
 });
 
 test( "content: return jQuery", function() {
+	expect( 1 );
 	var element = $( "#tooltipped1" ).tooltip({
 		content: function() {
 			return $( "<div>" ).html( "cu<b>s</b>tomstring" );
@@ -39,6 +42,35 @@ asyncTest( "content: sync + async callback", function() {
 				}, 13 );
 			}, 13 );
 			return "loading...";
+		}
+	}).tooltip( "open" );
+});
+
+test( "content: change while open", function() {
+	expect( 2 ) ;
+	var element = $( "#tooltipped1" ).tooltip({
+		content: function() {
+			return "old";
+		}
+	});
+
+	element.one( "tooltipopen", function( event, ui ) {
+		equal( ui.tooltip.text(), "old", "original content" );
+		element.tooltip( "option", "content", function() {
+			return "new";
+		});
+		equal( ui.tooltip.text(), "new", "updated content" );
+	});
+
+	element.tooltip( "open" );
+});
+
+test( "content: string", function() {
+	expect( 1 );
+	var element = $( "#tooltipped1" ).tooltip({
+		content: "just a string",
+		open: function( event, ui ) {
+			equal( ui.tooltip.text(), "just a string" );
 		}
 	}).tooltip( "open" );
 });

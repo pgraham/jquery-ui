@@ -1,11 +1,12 @@
 /*!
  * jQuery UI Position @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
- * http://docs.jquery.com/UI/Position
+ * http://api.jqueryui.com/position/
  */
 (function( $, undefined ) {
 
@@ -359,7 +360,7 @@ $.ui.position = {
 			var within = data.within,
 				withinOffset = within.offset.left + within.scrollLeft,
 				outerWidth = within.width,
-				offsetLeft = within.isWindow ? 0 : within.offset.left,
+				offsetLeft = within.isWindow ? within.scrollLeft : within.offset.left,
 				collisionPosLeft = position.left - data.collisionPosition.marginLeft,
 				overLeft = collisionPosLeft - offsetLeft,
 				overRight = collisionPosLeft + data.collisionWidth - outerWidth - offsetLeft,
@@ -394,7 +395,7 @@ $.ui.position = {
 			var within = data.within,
 				withinOffset = within.offset.top + within.scrollTop,
 				outerHeight = within.height,
-				offsetTop = within.isWindow ? 0 : within.offset.top,
+				offsetTop = within.isWindow ? within.scrollTop : within.offset.top,
 				collisionPosTop = position.top - data.collisionPosition.marginTop,
 				overTop = collisionPosTop - offsetTop,
 				overBottom = collisionPosTop + data.collisionHeight - outerHeight - offsetTop,

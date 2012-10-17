@@ -44,6 +44,15 @@ test( "disconnected from DOM", function() {
 	equal( element.find( ".ui-tabs-panel" ).length, 3, "should initialize panels" );
 });
 
+test( "non-tab list items", function() {
+	expect( 2 );
+
+	var element = $( "#tabs9" ).tabs();
+	equal( element.tabs( "option", "active" ), 0, "defaults to first tab" );
+	equal( element.find( ".ui-tabs-nav li.ui-state-active" ).index(), 1,
+		"first actual tab is active" );
+});
+
 test( "aria-controls", function() {
 	expect( 7 );
 	var element = $( "#tabs1" ).tabs(),
@@ -118,8 +127,24 @@ test( "accessibility", function() {
 	equal( tabs.eq( 2 ).attr( "aria-disabled" ), "true", "disabled tab has aria-disabled=true" );
 	equal( panels.eq( 2 ).attr( "aria-expanded" ), "false", "inactive panel has aria-expanded=false" );
 	equal( panels.eq( 2 ).attr( "aria-hidden" ), "true", "inactive panel has aria-hidden=true" );
+});
 
-	// TODO: aria-live and aria-busy tests for ajax tabs
+asyncTest( "accessibility - ajax", function() {
+	expect( 4 );
+	var element = $( "#tabs2" ).tabs(),
+		tab = element.find( ".ui-tabs-nav li" ).eq( 3 ),
+		panel = $( "#custom-id" );
+
+	equal( panel.attr( "aria-live" ), "polite", "remote panel has aria-live" );
+	equal( panel.attr( "aria-busy" ), null, "does not have aria-busy on init" );
+	element.tabs( "option", "active", 3 );
+	equal( panel.attr( "aria-busy" ), "true", "panel has aria-busy during load" );
+	element.one( "tabsload", function() {
+		setTimeout(function() {
+			equal( panel.attr( "aria-busy" ), null, "panel does not have aria-busy after load" );
+			start();
+		}, 1 );
+	});
 });
 
 asyncTest( "keyboard support - LEFT, RIGHT, UP, DOWN, HOME, END, SPACE, ENTER", function() {
@@ -269,11 +294,7 @@ asyncTest( "keyboard support - LEFT, RIGHT, UP, DOWN, HOME, END, SPACE, ENTER", 
 		equal( panels.eq( 2 ).attr( "aria-expanded" ), "false", "third panel has aria-expanded=false" );
 		equal( panels.eq( 2 ).attr( "aria-hidden" ), "true", "third panel has aria-hidden=true" );
 
-		// support: Firefox 12
-		// Firefox <13 passes arguments so we can't use setTimeout( start, 1 )
-		setTimeout(function() {
-			start();
-		}, 1 );
+		setTimeout( start, 1 );
 	}
 
 	setTimeout( step1, 1 );
@@ -466,11 +487,7 @@ asyncTest( "keyboard support - CTRL navigation", function() {
 		equal( panels.eq( 0 ).attr( "aria-expanded" ), "false", "first panel has aria-expanded=false" );
 		equal( panels.eq( 0 ).attr( "aria-hidden" ), "true", "first panel has aria-hidden=true" );
 
-		// support: Firefox 12
-		// Firefox <13 passes arguments so we can't use setTimeout( start, 1 )
-		setTimeout(function() {
-			start();
-		}, 1 );
+		setTimeout( start, 1 );
 	}
 
 	setTimeout( step1, 1 );
@@ -562,11 +579,7 @@ asyncTest( "keyboard support - CTRL+UP, ALT+PAGE_DOWN, ALT+PAGE_UP", function() 
 		panels.eq( 1 ).simulate( "keydown", { keyCode: keyCode.UP, ctrlKey: true } );
 		strictEqual( document.activeElement, tabs[ 1 ], "second tab is activeElement" );
 
-		// support: Firefox 12
-		// Firefox <13 passes arguments so we can't use setTimeout( start, 1 )
-		setTimeout(function() {
-			start();
-		}, 1 );
+		setTimeout( start, 1 );
 	}
 
 	setTimeout( step1, 1 );

@@ -1,11 +1,12 @@
 /*!
  * jQuery UI Slider @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
- * http://docs.jquery.com/UI/Slider
+ * http://api.jqueryui.com/slider/
  *
  * Depends:
  *	jquery.ui.core.js
@@ -506,6 +507,12 @@ $.widget( "ui.slider", $.ui.mouse, {
 				for ( i = 0; i < valsLength; i += 1 ) {
 					this._change( null, i );
 				}
+				this._animateOff = false;
+				break;
+			case "min":
+			case "max":
+				this._animateOff = true;
+				this._refreshValue();
 				this._animateOff = false;
 				break;
 		}

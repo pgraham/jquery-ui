@@ -3,27 +3,30 @@
 <head>
 	<meta charset="utf-8">
 	<title>Menu Demo: Top-aligned Menu</title>
-	<link type="text/css" href="../demos.css" rel="stylesheet" />
-	<link type="text/css" href="../../themes/base/jquery.ui.all.css" rel="stylesheet" />
-	<script src="../../jquery-1.7.2.js"></script>
+	<link rel="stylesheet" href="../demos.css">
+	<link rel="stylesheet" href="../../themes/base/jquery.ui.all.css">
+	<script src="../../jquery-1.8.2.js"></script>
 	<script src="../../ui/jquery.ui.core.js"></script>
 	<script src="../../ui/jquery.ui.widget.js"></script>
 	<script src="../../ui/jquery.ui.position.js"></script>
 	<script src="../../ui/jquery.ui.menu.js"></script>
 	<script>
 	$(function() {
-		$("#topMenu").menu({
-			position: { of: "ul:has(a.ui-state-focus):last" }
+		$( "#menu" ).menu({
+			position: { of: "ul:has(a.ui-state-focus):last" },
+			icons: {
+				submenu: "ui-icon-carat-1-e"
+			}
 		});
 	});
 	</script>
 	<style>
-		.ui-menu { width: 200px; margin-bottom: 2em; }
+	.ui-menu { width: 200px; margin-bottom: 2em; }
 	</style>
 </head>
 <body>
 
-<ul id="topMenu">
+<ul id="menu">
 	<li><a href="#">Aberdeen</a></li>
 	<li><a href="#">Ada</a></li>
 	<li><a href="#">Adamsville</a></li>
@@ -77,5 +80,8 @@
 	</li>
 </ul>
 
+<div class="demo-description">
+<p>Menus can use custom positioning. There is a delay before activing an item on hover and a delay before closing a menu on mouse out to allow for moving to a submenu that is not touching its parent item.</p>
+</div>
 </body>
 </html>

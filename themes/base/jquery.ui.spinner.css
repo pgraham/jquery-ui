@@ -1,8 +1,9 @@
 /*!
  * jQuery UI Spinner @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
  * http://docs.jquery.com/UI/Spinner#theming
@@ -16,7 +17,6 @@
 .ui-spinner-down { bottom: 0; }
 
 /* TR overrides */
-span.ui-spinner { background: none; }
 .ui-spinner .ui-icon-triangle-1-s {
 	/* need to fix icons sprite */
 	background-position:-65px -16px;

@@ -1,5 +1,7 @@
 (function( $ ) {
 
+var reset, jshintLoaded;
+
 window.TestHelpers = {};
 
 function includeStyle( url ) {
@@ -10,10 +12,25 @@ function includeScript( url ) {
 	document.write( "<script src='../../../" + url + "'></script>" );
 }
 
-QUnit.config.urlConfig.push( "min" );
+reset = QUnit.reset;
+QUnit.reset = function() {
+	// Ensure jQuery events and data on the fixture are properly removed
+	jQuery("#qunit-fixture").empty();
+	// Let QUnit reset the fixture
+	reset.apply( this, arguments );
+};
+
+
+QUnit.config.requireExpects = true;
+
+QUnit.config.urlConfig.push({
+  id: "min",
+  label: "Minified source",
+  tooltip: "Load minified source files instead of the regular unminified ones."
+});
+
 TestHelpers.loadResources = QUnit.urlParams.min ?
 	function() {
-		// TODO: proper include with theme images
 		includeStyle( "dist/jquery-ui.min.css" );
 		includeScript( "dist/jquery-ui.min.js" );
 	} :
@@ -26,8 +43,13 @@ TestHelpers.loadResources = QUnit.urlParams.min ?
 		});
 	};
 
-QUnit.config.urlConfig.push( "nojshint" );
-var jshintLoaded = false;
+QUnit.config.urlConfig.push({
+	id: "nojshint",
+	label: "Skip JSHint",
+	tooltip: "Skip running JSHint, e.g. within TestSwarm, where Jenkins runs it already"
+});
+
+jshintLoaded = false;
 TestHelpers.testJshint = function( module ) {
 	if ( QUnit.urlParams.nojshint ) {
 		return;
@@ -47,7 +69,7 @@ TestHelpers.testJshint = function( module ) {
 				dataType: "json"
 			}),
 			$.ajax({
-				url: "../../../ui/jquery." + module + ".js",
+				url: "../../../ui/jquery.ui." + module + ".js",
 				dataType: "text"
 			})
 		).done(function( hintArgs, srcArgs ) {
@@ -76,7 +98,9 @@ function testWidgetDefaults( widget, defaults ) {
 
 	// ensure that all defaults have the correct value
 	test( "defined defaults", function() {
+		var count = 0;
 		$.each( defaults, function( key, val ) {
+			expect( ++count );
 			if ( $.isFunction( val ) ) {
 				ok( $.isFunction( pluginDefaults[ key ] ), key );
 				return;
@@ -87,7 +111,9 @@ function testWidgetDefaults( widget, defaults ) {
 
 	// ensure that all defaults were tested
 	test( "tested defaults", function() {
+		var count = 0;
 		$.each( pluginDefaults, function( key, val ) {
+			expect( ++count );
 			ok( key in defaults, key );
 		});
 	});
@@ -96,6 +122,7 @@ function testWidgetDefaults( widget, defaults ) {
 function testWidgetOverrides( widget ) {
 	if ( $.uiBackCompat === false ) {
 		test( "$.widget overrides", function() {
+			expect( 4 );
 			$.each([
 				"_createWidget",
 				"destroy",
@@ -111,6 +138,8 @@ function testWidgetOverrides( widget ) {
 
 function testBasicUsage( widget ) {
 	test( "basic usage", function() {
+		expect( 3 );
+
 		var defaultElement = $.ui[ widget ].prototype.defaultElement;
 		$( defaultElement ).appendTo( "body" )[ widget ]().remove();
 		ok( true, "initialized on element" );
@@ -126,11 +155,12 @@ function testBasicUsage( widget ) {
 TestHelpers.commonWidgetTests = function( widget, settings ) {
 	module( widget + ": common widget" );
 
-	TestHelpers.testJshint( "ui." + widget );
+	TestHelpers.testJshint( widget );
 	testWidgetDefaults( widget, settings.defaults );
 	testWidgetOverrides( widget );
 	testBasicUsage( widget );
 	test( "version", function() {
+		expect( 1 );
 		ok( "version" in $.ui[ widget ].prototype, "version property exists" );
 	});
 };

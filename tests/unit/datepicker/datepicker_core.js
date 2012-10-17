@@ -43,20 +43,23 @@ var PROP_NAME = 'datepicker';
 module("datepicker: core");
 
 test( "widget method - empty collection", function() {
+	expect( 1 );
 	$( "#nonExist" ).datepicker(); // should create nothing
 	ok( !$( "#ui-datepicker-div" ).length, "Non init on empty collection" );
 });
 
 test("widget method", function() {
+	expect( 1 );
 	var actual = $("#inp").datepicker().datepicker("widget")[0];
 	deepEqual($("body > #ui-datepicker-div:last-child")[0], actual);
 });
 
 test('baseStructure', function() {
+	expect( 59 );
 	var header, title, table, thead, week, panel, inl, child,
 		inp = init('#inp').focus(),
 		dp = $('#ui-datepicker-div'),
-		iframe = ($.browser.msie && parseInt($.browser.version, 10) < 7);
+		iframe = ($.ui.ie6);
 	ok(dp.is(':visible'), 'Structure - datepicker visible');
 	ok(!dp.is('.ui-datepicker-rtl'), 'Structure - not right-to-left');
 	ok(!dp.is('.ui-datepicker-multi'), 'Structure - not multi-month');
@@ -176,13 +179,14 @@ test('baseStructure', function() {
 });
 
 test('customStructure', function() {
+	expect( 20 );
 	var iframe, header, panel, title, thead,
 		dp = $('#ui-datepicker-div'),
 		// Check right-to-left localisation
 		inp = init('#inp', $.datepicker.regional.he);
 	inp.data('showButtonPanel.datepicker',true);
 	inp.focus();
-	iframe = ($.browser.msie && parseInt($.browser.version, 10) < 7);
+	iframe = ($.ui.ie6);
 	ok(dp.is('.ui-datepicker-rtl'), 'Structure RTL - right-to-left');
 	header = dp.children(':first');
 	ok(header.is('div.ui-datepicker-header'), 'Structure RTL - header division');
@@ -233,6 +237,7 @@ test('customStructure', function() {
 });
 
 test('keystrokes', function() {
+	expect( 26 );
 	var inp = init('#inp'),
 		date = new Date();
 	inp.val('').datepicker('show').
@@ -367,6 +372,7 @@ test('keystrokes', function() {
 });
 
 test('mouse', function() {
+	expect( 15 );
 	var inl,
 		inp = init('#inp'),
 		dp = $('#ui-datepicker-div'),
