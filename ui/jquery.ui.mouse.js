@@ -1,11 +1,12 @@
 /*!
  * jQuery UI Mouse @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
- * http://docs.jquery.com/UI/Mouse
+ * http://api.jqueryui.com/mouse/
  *
  * Depends:
  *	jquery.ui.widget.js
@@ -13,7 +14,7 @@
 (function( $, undefined ) {
 
 var mouseHandled = false;
-$( document ).mouseup( function( e ) {
+$( document ).mouseup( function() {
 	mouseHandled = false;
 });
 
@@ -46,9 +47,11 @@ $.widget("ui.mouse", {
 	// other instances of mouse
 	_mouseDestroy: function() {
 		this.element.unbind('.'+this.widgetName);
-		$(document)
-			.unbind('mousemove.'+this.widgetName, this._mouseMoveDelegate)
-			.unbind('mouseup.'+this.widgetName, this._mouseUpDelegate);
+		if ( this._mouseMoveDelegate ) {
+			$(document)
+				.unbind('mousemove.'+this.widgetName, this._mouseMoveDelegate)
+				.unbind('mouseup.'+this.widgetName, this._mouseUpDelegate);
+		}
 	},
 
 	_mouseDown: function(event) {
@@ -101,14 +104,14 @@ $.widget("ui.mouse", {
 			.bind('mouseup.'+this.widgetName, this._mouseUpDelegate);
 
 		event.preventDefault();
-		
+
 		mouseHandled = true;
 		return true;
 	},
 
 	_mouseMove: function(event) {
 		// IE mouseup check - mouseup happened when mouse was out of window
-		if ($.browser.msie && !(document.documentMode >= 9) && !event.button) {
+		if ($.ui.ie && ( !document.documentMode || document.documentMode < 9 ) && !event.button) {
 			return this._mouseUp(event);
 		}
 
@@ -152,15 +155,15 @@ $.widget("ui.mouse", {
 		);
 	},
 
-	_mouseDelayMet: function(event) {
+	_mouseDelayMet: function(/* event */) {
 		return this.mouseDelayMet;
 	},
 
 	// These are placeholder methods, to be overriden by extending plugin
-	_mouseStart: function(event) {},
-	_mouseDrag: function(event) {},
-	_mouseStop: function(event) {},
-	_mouseCapture: function(event) { return true; }
+	_mouseStart: function(/* event */) {},
+	_mouseDrag: function(/* event */) {},
+	_mouseStop: function(/* event */) {},
+	_mouseCapture: function(/* event */) { return true; }
 });
 
 })(jQuery);

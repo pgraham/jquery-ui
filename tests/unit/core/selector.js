@@ -150,9 +150,17 @@ test("focusable - not natively focusable with various tabindex", function() {
 });
 
 test("focusable - area elements", function() {
+	expect( 3 );
+
 	isFocusable('#areaCoordsHref', 'coords and href');
 	isFocusable('#areaNoCoordsHref', 'href but no coords');
 	isNotFocusable('#areaNoImg', 'not associated with an image');
+});
+
+test( "focusable - dimensionless parent with overflow", function() {
+	expect( 1 );
+
+	isFocusable( "#dimensionlessParent", "input" );
 });
 
 test("tabbable - visible, enabled elements", function() {
@@ -227,9 +235,17 @@ test("tabbable -  not natively tabbable with various tabindex", function() {
 });
 
 test("tabbable - area elements", function() {
+	expect( 3 );
+
 	isTabbable('#areaCoordsHref', 'coords and href');
 	isTabbable('#areaNoCoordsHref', 'href but no coords');
 	isNotTabbable('#areaNoImg', 'not associated with an image');
+});
+
+test( "tabbable - dimensionless parent with overflow", function() {
+	expect( 1 );
+
+	isTabbable( "#dimensionlessParent", "input" );
 });
 
 })(jQuery);

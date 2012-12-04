@@ -5,8 +5,9 @@ module( "autocomplete: options" );
 var data = [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby", "python", "c", "scala", "groovy", "haskell", "perl" ];
 
 test( "appendTo", function() {
-	expect( 5 );
-	var element = $( "#autocomplete" ).autocomplete();
+	expect( 7 );
+	var detached = $( "<div>" ),
+		element = $( "#autocomplete" ).autocomplete();
 	equal( element.autocomplete( "widget" ).parent()[0], document.body, "defaults to body" );
 	element.autocomplete( "destroy" );
 
@@ -26,6 +27,18 @@ test( "appendTo", function() {
 	element.autocomplete().autocomplete( "option", "appendTo", "#ac-wrap1" );
 	equal( element.autocomplete( "widget" ).parent()[0], $( "#ac-wrap1" )[0], "modified after init" );
 	element.autocomplete( "destroy" );
+
+	element.autocomplete({
+		appendTo: detached
+	});
+	equal( element.autocomplete( "widget" ).parent()[0], detached[0], "detached jQuery object" );
+	element.autocomplete( "destroy" );
+
+	element.autocomplete({
+		appendTo: detached[0]
+	});
+	equal( element.autocomplete( "widget" ).parent()[0], detached[0], "detached DOM element" );
+	element.autocomplete( "destroy" );
 });
 
 function autoFocusTest( afValue, focusedLength ) {
@@ -33,7 +46,7 @@ function autoFocusTest( afValue, focusedLength ) {
 		autoFocus: afValue,
 		delay: 0,
 		source: data,
-		open: function( event, ui ) {
+		open: function() {
 			equal( element.autocomplete( "widget" ).children( ".ui-menu-item:first" ).find( ".ui-state-focus" ).length,
 				focusedLength, "first item is " + (afValue ? "" : "not") + " auto focused" );
 			start();

@@ -1,6 +1,7 @@
 module( "progressbar: options" );
 
 test( "{ value : 0 }, default", function() {
+	expect( 1 );
 	$( "#progressbar" ).progressbar();
 	equal( 0, $( "#progressbar" ).progressbar( "value" ) );
 });
@@ -28,6 +29,7 @@ test( "value: visibility of valueDiv", function() {
 });
 
 test( "{ value : 5 }", function() {
+	expect( 1 );
 	$( "#progressbar" ).progressbar({
 		value: 5
 	});
@@ -35,6 +37,7 @@ test( "{ value : 5 }", function() {
 });
 
 test( "{ value : -5 }", function() {
+	expect( 1 );
 	$( "#progressbar" ).progressbar({
 		value: -5
 	});
@@ -42,6 +45,7 @@ test( "{ value : -5 }", function() {
 });
 
 test( "{ value : 105 }", function() {
+	expect( 1 );
 	$( "#progressbar" ).progressbar({
 		value: 105
 	});
@@ -49,9 +53,28 @@ test( "{ value : 105 }", function() {
 });
 
 test( "{ max : 5, value : 10 }", function() {
+	expect( 1 );
 	$("#progressbar").progressbar({
 		max: 5,
 		value: 10
 	});
+	deepEqual( 5, $( "#progressbar" ).progressbar( "value" ) );
+});
+
+test( "{ value : 10, max : 5 }", function() {
+	expect( 1 );
+	$("#progressbar").progressbar({
+		max: 5,
+		value: 10
+	});
+	deepEqual( 5, $( "#progressbar" ).progressbar( "value" ) );
+});
+
+test( "{ max : 5 }", function() {
+	expect( 1 );
+	$("#progressbar").progressbar({
+		max: 10,
+		value: 10
+	}).progressbar( "option", "max", 5 );
 	deepEqual( 5, $( "#progressbar" ).progressbar( "value" ) );
 });

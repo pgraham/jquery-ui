@@ -8,6 +8,7 @@
 module("button: core");
 
 test("checkbox", function() {
+	expect( 4 );
 	var input = $("#check"),
 		label = $("label[for=check]");
 	ok( input.is(":visible") );
@@ -18,6 +19,7 @@ test("checkbox", function() {
 });
 
 test("radios", function() {
+	expect( 4 );
 	var inputs = $("#radio0 input"),
 		labels = $("#radio0 label");
 	ok( inputs.is(":visible") );
@@ -34,6 +36,7 @@ function assert(noForm, form1, form2) {
 }
 
 test("radio groups", function() {
+	expect( 12 );
 	$("input[type=radio]").button();
 	assert(":eq(0)", ":eq(1)", ":eq(2)");
 
@@ -51,6 +54,7 @@ test("radio groups", function() {
 });
 
 test("input type submit, don't create child elements", function() {
+	expect( 2 );
 	var input = $("#submit");
 	deepEqual( input.children().length, 0 );
 	input.button();
@@ -58,6 +62,7 @@ test("input type submit, don't create child elements", function() {
 });
 
 test("buttonset", function() {
+	expect( 6 );
 	var set = $("#radio1").buttonset();
 	ok( set.is(".ui-buttonset") );
 	deepEqual( set.children(".ui-button").length, 3 );
@@ -68,6 +73,7 @@ test("buttonset", function() {
 });
 
 test("buttonset (rtl)", function() {
+	expect( 6 );
 	var set,
 		parent = $("#radio1").parent();
 	// Set to rtl
@@ -81,5 +87,30 @@ test("buttonset (rtl)", function() {
 	ok( set.children("label:eq(1)").is(".ui-button:not(.ui-corner-all)") );
 	ok( set.children("label:eq(2)").is(".ui-button.ui-corner-left:not(.ui-corner-all)") );
 });
+
+// TODO: simulated click events don't behave like real click events in IE
+// remove this when simulate properly simulates this
+// see http://yuilibrary.com/projects/yui2/ticket/2528826 fore more info
+if ( !$.ui.ie || ( document.documentMode && document.documentMode > 8 ) ) {
+	asyncTest( "ensure checked and aria after single click on checkbox label button, see #5518", function() {
+		expect( 3 );
+
+		$("#check2").button().change( function() {
+			var lbl = $( this ).button("widget");
+			ok( this.checked, "checked ok" );
+			ok( lbl.attr("aria-pressed") === "true", "aria ok" );
+			ok( lbl.hasClass("ui-state-active"), "ui-state-active ok" );
+		});
+
+		// support: Opera
+		// Opera doesn't trigger a change event when this is done synchronously.
+		// This seems to be a side effect of another test, but until that can be
+		// tracked down, this delay will have to do.
+		setTimeout(function() {
+			$("#check2").button("widget").simulate("click");
+			start();
+		}, 1 );
+	});
+}
 
 })(jQuery);

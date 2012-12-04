@@ -7,7 +7,7 @@ var disabled = TestHelpers.tabs.disabled,
 module( "tabs: options" );
 
 test( "{ active: default }", function() {
-	expect( 4 );
+	expect( 6 );
 
 	var element = $( "#tabs1" ).tabs();
 	equal( element.tabs( "option", "active" ), 0, "should be 0 by default" );
@@ -18,6 +18,12 @@ test( "{ active: default }", function() {
 	element = $( "#tabs1" ).tabs();
 	equal( element.tabs( "option", "active" ), 2, "should be 2 based on URL" );
 	state( element, 0, 0, 1 );
+	element.tabs( "destroy" );
+
+	location.hash = "#custom-id";
+	element = $( "#tabs2" ).tabs();
+	equal( element.tabs( "option", "active" ), 3, "should be 3 based on URL" );
+	state( element, 0, 0, 0, 1, 0 );
 	element.tabs( "destroy" );
 	location.hash = "#";
 });
@@ -67,27 +73,27 @@ test( "{ active: Number }", function() {
 	state( element, 0, 1, 0 );
 });
 
-if ( $.uiBackCompat === false ) {
-	test( "{ active: -Number }", function() {
-		var element = $( "#tabs1" ).tabs({
-			active: -1
-		});
-		equal( element.tabs( "option", "active" ), 2 );
-		state( element, 0, 0, 1 );
+test( "{ active: -Number }", function() {
+	expect( 8 );
 
-		element.tabs( "option", "active", -2 );
-		equal( element.tabs( "option", "active" ), 1 );
-		state( element, 0, 1, 0 );
-
-		element.tabs( "option", "active", -10 );
-		equal( element.tabs( "option", "active" ), 1 );
-		state( element, 0, 1, 0 );
-
-		element.tabs( "option", "active", -3 );
-		equal( element.tabs( "option", "active" ), 0 );
-		state( element, 1, 0, 0 );
+	var element = $( "#tabs1" ).tabs({
+		active: -1
 	});
-}
+	equal( element.tabs( "option", "active" ), 2 );
+	state( element, 0, 0, 1 );
+
+	element.tabs( "option", "active", -2 );
+	equal( element.tabs( "option", "active" ), 1 );
+	state( element, 0, 1, 0 );
+
+	element.tabs( "option", "active", -10 );
+	equal( element.tabs( "option", "active" ), 1 );
+	state( element, 0, 1, 0 );
+
+	element.tabs( "option", "active", -3 );
+	equal( element.tabs( "option", "active" ), 0 );
+	state( element, 1, 0, 0 );
+});
 
 test( "active - mismatched tab/panel order", function() {
 	expect( 3 );
@@ -229,10 +235,18 @@ test( "{ heightStyle: 'content' }", function() {
 });
 
 test( "{ heightStyle: 'fill' }", function() {
-	expect( 2 );
+	expect( 4 );
 	$( "#tabs8Wrapper" ).height( 500 );
 	var element = $( "#tabs8" ).tabs({ heightStyle: "fill" });
 	equalHeight( element, 485 );
+	element.tabs( "destroy" );
+
+	element = $( "#tabs8" ).css({
+		"border": "1px solid black",
+		"padding": "1px 0"
+	});
+	element.tabs({ heightStyle: "fill" });
+	equalHeight( element, 481 );
 });
 
 test( "{ heightStyle: 'fill' } with sibling", function() {
@@ -278,6 +292,54 @@ test( "{ heightStyle: 'fill' } with multiple siblings", function() {
 	equalHeight( element, 335 );
 });
 
-// TODO: add animation tests
+test( "hide and show: false", function() {
+	expect( 3 );
+	var element = $( "#tabs1" ).tabs({
+			show: false,
+			hide: false
+		}),
+		widget = element.data( "ui-tabs" ),
+		panels = element.find( ".ui-tabs-panel" );
+	widget._show = function() {
+		ok( false, "_show() called" );
+	};
+	widget._hide = function() {
+		ok( false, "_hide() called" );
+	};
+
+	ok( panels.eq( 0 ).is( ":visible" ), "first panel visible" );
+	element.tabs( "option", "active", 1 );
+	ok( panels.eq( 0 ).is( ":hidden" ), "first panel hidden" );
+	ok( panels.eq( 1 ).is( ":visible" ), "second panel visible" );
+});
+
+asyncTest( "hide and show - animation", function() {
+	expect( 5 );
+	var element = $( "#tabs1" ).tabs({
+			show: "drop",
+			hide: 2000
+		}),
+		widget = element.data( "ui-tabs" ),
+		panels = element.find( ".ui-tabs-panel" );
+	widget._show = function( element, options, callback ) {
+		strictEqual( element[ 0 ], panels[ 1 ], "correct element in _show()" );
+		equal( options, "drop", "correct options in _show()" );
+		setTimeout(function() {
+			callback();
+		}, 1 );
+	};
+	widget._hide = function( element, options, callback ) {
+		strictEqual( element[ 0 ], panels[ 0 ], "correct element in _hide()" );
+		equal( options, 2000, "correct options in _hide()" );
+		setTimeout(function() {
+			callback();
+			start();
+		}, 1 );
+	};
+
+	ok( panels.eq( 0 ).is( ":visible" ), "first panel visible" );
+	element.tabs( "option", "active", 1 );
+});
+
 
 }( jQuery ) );

@@ -1,11 +1,12 @@
 /*!
  * jQuery UI Slider @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
- * http://docs.jquery.com/UI/Slider
+ * http://api.jqueryui.com/slider/
  *
  * Depends:
  *	jquery.ui.core.js
@@ -35,11 +36,10 @@ $.widget( "ui.slider", $.ui.mouse, {
 	},
 
 	_create: function() {
-		var i,
+		var i, handleCount,
 			o = this.options,
 			existingHandles = this.element.find( ".ui-slider-handle" ).addClass( "ui-state-default ui-corner-all" ),
 			handle = "<a class='ui-slider-handle ui-state-default ui-corner-all' href='#'></a>",
-			handleCount = ( o.values && o.values.length ) || 1,
 			handles = [];
 
 		this._keySliding = false;
@@ -54,8 +54,7 @@ $.widget( "ui.slider", $.ui.mouse, {
 				" ui-slider-" + this.orientation +
 				" ui-widget" +
 				" ui-widget-content" +
-				" ui-corner-all" +
-				( o.disabled ? " ui-slider-disabled ui-disabled" : "" ) );
+				" ui-corner-all");
 
 		this.range = $([]);
 
@@ -77,6 +76,8 @@ $.widget( "ui.slider", $.ui.mouse, {
 				" ui-widget-header" +
 				( ( o.range === "min" || o.range === "max" ) ? " ui-slider-range-" + o.range : "" ) );
 		}
+
+		handleCount = ( o.values && o.values.length ) || 1;
 
 		for ( i = existingHandles.length; i < handleCount; i++ ) {
 			handles.push( handle );
@@ -114,7 +115,9 @@ $.widget( "ui.slider", $.ui.mouse, {
 			$( this ).data( "ui-slider-handle-index", i );
 		});
 
-		this._bind( this.handles, {
+		this._setOption( "disabled", o.disabled );
+
+		this._on( this.handles, {
 			keydown: function( event ) {
 				var allowed, curVal, newVal, step,
 					index = $( event.target ).data( "ui-slider-handle-index" );
@@ -203,7 +206,6 @@ $.widget( "ui.slider", $.ui.mouse, {
 			.removeClass( "ui-slider" +
 				" ui-slider-horizontal" +
 				" ui-slider-vertical" +
-				" ui-slider-disabled" +
 				" ui-widget" +
 				" ui-widget-content" +
 				" ui-corner-all" );
@@ -231,20 +233,14 @@ $.widget( "ui.slider", $.ui.mouse, {
 		distance = this._valueMax() - this._valueMin() + 1;
 		this.handles.each(function( i ) {
 			var thisDistance = Math.abs( normValue - that.values(i) );
-			if ( distance > thisDistance ) {
+			if (( distance > thisDistance ) ||
+				( distance === thisDistance &&
+					(i === that._lastChangedValue || that.values(i) === o.min ))) {
 				distance = thisDistance;
 				closestHandle = $( this );
 				index = i;
 			}
 		});
-
-		// workaround for bug #3736 (if both handles of a range are at 0,
-		// the first is always used as the one with least distance,
-		// and moving it is obviously prevented by preventing negative ranges)
-		if( o.range === true && this.values(1) === o.min ) {
-			index += 1;
-			closestHandle = $( this.handles[index] );
-		}
 
 		allowed = this._start( event, index );
 		if ( allowed === false ) {
@@ -276,7 +272,7 @@ $.widget( "ui.slider", $.ui.mouse, {
 		return true;
 	},
 
-	_mouseStart: function( event ) {
+	_mouseStart: function() {
 		return true;
 	},
 
@@ -417,6 +413,9 @@ $.widget( "ui.slider", $.ui.mouse, {
 				uiHash.values = this.values();
 			}
 
+			//store the last changed value index for reference when handles overlap
+			this._lastChangedValue = index;
+
 			this._trigger( "change", event, uiHash );
 		}
 	},
@@ -481,10 +480,8 @@ $.widget( "ui.slider", $.ui.mouse, {
 					this.handles.filter( ".ui-state-focus" ).blur();
 					this.handles.removeClass( "ui-state-hover" );
 					this.handles.prop( "disabled", true );
-					this.element.addClass( "ui-disabled" );
 				} else {
 					this.handles.prop( "disabled", false );
-					this.element.removeClass( "ui-disabled" );
 				}
 				break;
 			case "orientation":
@@ -506,6 +503,12 @@ $.widget( "ui.slider", $.ui.mouse, {
 				for ( i = 0; i < valsLength; i += 1 ) {
 					this._change( null, i );
 				}
+				this._animateOff = false;
+				break;
+			case "min":
+			case "max":
+				this._animateOff = true;
+				this._refreshValue();
 				this._animateOff = false;
 				break;
 		}
@@ -583,7 +586,7 @@ $.widget( "ui.slider", $.ui.mouse, {
 			_set = {};
 
 		if ( this.options.values && this.options.values.length ) {
-			this.handles.each(function( i, j ) {
+			this.handles.each(function( i ) {
 				valPercent = ( that.values(i) - that._valueMin() ) / ( that._valueMax() - that._valueMin() ) * 100;
 				_set[ that.orientation === "horizontal" ? "left" : "bottom" ] = valPercent + "%";
 				$( this ).stop( 1, 1 )[ animate ? "animate" : "css" ]( _set, o.animate );

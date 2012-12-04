@@ -23,12 +23,20 @@ TestHelpers.commonWidgetTests( "dialog", {
 		},
 		resizable: true,
 		show: null,
-		stack: true,
-		title: '',
+		title: null,
 		width: 300,
-		zIndex: 1000,
 
 		// callbacks
-		create: null
+		beforeClose: null,
+		close: null,
+		create: null,
+		drag: null,
+		dragStart: null,
+		dragStop: null,
+		focus: null,
+		open: null,
+		resize: null,
+		resizeStart: null,
+		resizeStop: null
 	}
 });

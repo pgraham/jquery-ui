@@ -17,8 +17,8 @@ test("init", function() {
 	$('<div></div>').slider().remove();
 	ok(true, '.slider() called on disconnected DOMElement');
 
-	var el = $('<div></div>').slider(),
-		foo = el.slider("option", "foo");
+	var el = $('<div></div>').slider();
+	el.slider("option", "foo");
 	el.remove();
 	ok(true, 'arbitrary option getter after init');
 
@@ -27,49 +27,44 @@ test("init", function() {
 });
 
 test("destroy", function() {
-	$("<div></div>").appendTo('body').slider().slider("destroy").remove();
-	ok(true, '.slider("destroy") called on element');
-
-	$([]).slider().slider("destroy").remove();
-	ok(true, '.slider("destroy") called on empty collection');
-
-	$('<div></div>').appendTo('body').remove().slider().slider("destroy").remove();
-	ok(true, '.slider("destroy") called on disconnected DOMElement');
-
-	var expected = $('<div></div>').slider(),
-		actual = expected.slider('destroy');
-	equal(actual, expected, 'destroy is chainable');
+	expect( 1 );
+	domEqual( "#slider1", function() {
+		$( "#slider1" ).slider().slider( "destroy" );
+	});
 });
 
 test("enable", function() {
+	expect( 5 );
 	var el,
 		expected = $('<div></div>').slider(),
 		actual = expected.slider('enable');
 	equal(actual, expected, 'enable is chainable');
 
 	el = $('<div></div>').slider({ disabled: true });
-	ok(el.hasClass('ui-disabled'), 'slider has ui-disabled class before enable method call');
+	ok(el.hasClass('ui-state-disabled'), 'slider has ui-state-disabled class before enable method call');
 	ok(el.hasClass('ui-slider-disabled'), 'slider has ui-slider-disabled class before enable method call');
 	el.slider('enable');
-	ok(!el.hasClass('ui-disabled'), 'slider does not have ui-disabled class after enable method call');
+	ok(!el.hasClass('ui-state-disabled'), 'slider does not have ui-state-disabled class after enable method call');
 	ok(!el.hasClass('ui-slider-disabled'), 'slider does not have ui-slider-disabled class after enable method call');
 });
 
 test("disable", function() {
+	expect( 5 );
 	var el,
 		expected = $('<div></div>').slider(),
 		actual = expected.slider('disable');
 	equal(actual, expected, 'disable is chainable');
 
 	el = $('<div></div>').slider({ disabled: false });
-	ok(!el.hasClass('ui-disabled'), 'slider does not have ui-disabled class before disabled method call');
+	ok(!el.hasClass('ui-state-disabled'), 'slider does not have ui-state-disabled class before disabled method call');
 	ok(!el.hasClass('ui-slider-disabled'), 'slider does not have ui-slider-disabled class before disable method call');
 	el.slider('disable');
-	ok(el.hasClass('ui-disabled'), 'slider has ui-disabled class after disable method call');
+	ok(el.hasClass('ui-state-disabled'), 'slider has ui-state-disabled class after disable method call');
 	ok(el.hasClass('ui-slider-disabled'), 'slider has ui-slider-disabled class after disable method call');
 });
 
 test("value", function() {
+	expect( 17 );
 	$([false, 'min', 'max']).each(function() {
 		var el = $('<div></div>').slider({
 			range: this,

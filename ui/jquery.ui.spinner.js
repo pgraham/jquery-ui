@@ -1,11 +1,12 @@
 /*!
  * jQuery UI Spinner @VERSION
+ * http://jqueryui.com
  *
- * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Copyright 2012 jQuery Foundation and other contributors
+ * Released under the MIT license.
  * http://jquery.org/license
  *
- * http://docs.jquery.com/UI/Spinner
+ * http://api.jqueryui.com/spinner/
  *
  * Depends:
  *  jquery.ui.core.js
@@ -31,6 +32,10 @@ $.widget( "ui.spinner", {
 	widgetEventPrefix: "spin",
 	options: {
 		culture: null,
+		icons: {
+			down: "ui-icon-triangle-1-s",
+			up: "ui-icon-triangle-1-n"
+		},
 		incremental: true,
 		max: null,
 		min: null,
@@ -54,13 +59,13 @@ $.widget( "ui.spinner", {
 		this._value( this.element.val(), true );
 
 		this._draw();
-		this._bind( this._events );
+		this._on( this._events );
 		this._refresh();
 
 		// turning off autocomplete prevents the browser from remembering the
 		// value when navigating through history, so we re-enable autocomplete
 		// if the page is unloaded before the widget is destroyed. #7790
-		this._bind( this.window, {
+		this._on( this.window, {
 			beforeunload: function() {
 				this.element.removeAttr( "autocomplete" );
 			}
@@ -89,7 +94,6 @@ $.widget( "ui.spinner", {
 		},
 		keyup: "_stop",
 		focus: function() {
-			this.uiSpinner.addClass( "ui-state-active" );
 			this.previous = this.element.val();
 		},
 		blur: function( event ) {
@@ -99,7 +103,6 @@ $.widget( "ui.spinner", {
 			}
 
 			this._refresh();
-			this.uiSpinner.removeClass( "ui-state-active" );
 			if ( this.previous !== this.element.val() ) {
 				this._trigger( "change", event );
 			}
@@ -191,7 +194,6 @@ $.widget( "ui.spinner", {
 			.parent()
 				// add buttons
 				.append( this._buttonHtml() );
-		this._hoverable( uiSpinner );
 
 		this.element.attr( "role", "spinbutton" );
 
@@ -237,16 +239,16 @@ $.widget( "ui.spinner", {
 	},
 
 	_uiSpinnerHtml: function() {
-		return "<span class='ui-spinner ui-state-default ui-widget ui-widget-content ui-corner-all'></span>";
+		return "<span class='ui-spinner ui-widget ui-widget-content ui-corner-all'></span>";
 	},
 
 	_buttonHtml: function() {
 		return "" +
 			"<a class='ui-spinner-button ui-spinner-up ui-corner-tr'>" +
-				"<span class='ui-icon ui-icon-triangle-1-n'>&#9650;</span>" +
+				"<span class='ui-icon " + this.options.icons.up + "'>&#9650;</span>" +
 			"</a>" +
 			"<a class='ui-spinner-button ui-spinner-down ui-corner-br'>" +
-				"<span class='ui-icon ui-icon-triangle-1-s'>&#9660;</span>" +
+				"<span class='ui-icon " + this.options.icons.down + "'>&#9660;</span>" +
 			"</a>";
 	},
 
