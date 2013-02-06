@@ -2,7 +2,7 @@
  * jQuery UI Effects @VERSION
  * http://jqueryui.com
  *
- * Copyright 2012 jQuery Foundation and other contributors
+ * Copyright 2013 jQuery Foundation and other contributors
  * Released under the MIT license.
  * http://jquery.org/license
  *
@@ -17,14 +17,14 @@ $.effects = {
 };
 
 /*!
- * jQuery Color Animations v2.1.1
+ * jQuery Color Animations v2.1.2
  * https://github.com/jquery/jquery-color
  *
- * Copyright 2012 jQuery Foundation and other contributors
+ * Copyright 2013 jQuery Foundation and other contributors
  * Released under the MIT license.
  * http://jquery.org/license
  *
- * Date: Sun Oct 28 15:08:06 2012 -0400
+ * Date: Wed Jan 16 08:47:09 2013 -0600
  */
 (function( jQuery, undefined ) {
 
@@ -596,7 +596,7 @@ color.hook = function( hook ) {
 				var parsed, curElem,
 					backgroundColor = "";
 
-				if ( jQuery.type( value ) !== "string" || ( parsed = stringParse( value ) ) ) {
+				if ( value !== "transparent" && ( jQuery.type( value ) !== "string" || ( parsed = stringParse( value ) ) ) ) {
 					value = color( parsed || value );
 					if ( !support.rgba && value._rgba[ 3 ] !== 1 ) {
 						curElem = hook === "backgroundColor" ? elem.parentNode : elem;
@@ -754,6 +754,15 @@ function styleDifference( oldStyle, newStyle ) {
 	return diff;
 }
 
+// support: jQuery <1.8
+if ( !$.fn.addBack ) {
+	$.fn.addBack = function( selector ) {
+		return this.add( selector == null ?
+			this.prevObject : this.prevObject.filter( selector )
+		);
+	};
+}
+
 $.effects.animateClass = function( value, duration, easing, callback ) {
 	var o = $.speed( duration, easing, callback );
 
@@ -761,7 +770,7 @@ $.effects.animateClass = function( value, duration, easing, callback ) {
 		var animated = $( this ),
 			baseClass = animated.attr( "class" ) || "",
 			applyClassChange,
-			allAnimations = o.children ? animated.find( "*" ).andSelf() : animated;
+			allAnimations = o.children ? animated.find( "*" ).addBack() : animated;
 
 		// map the animated objects to store the original styles.
 		allAnimations = allAnimations.map(function() {
@@ -818,7 +827,7 @@ $.effects.animateClass = function( value, duration, easing, callback ) {
 			$.each( arguments, function() {
 				var el = this.el;
 				$.each( this.diff, function(key) {
-					el.css( key, '' );
+					el.css( key, "" );
 				});
 			});
 
@@ -840,10 +849,10 @@ $.fn.extend({
 
 	_removeClass: $.fn.removeClass,
 	removeClass: function( classNames, speed, easing, callback ) {
-		return speed ?
+		return arguments.length > 1 ?
 			$.effects.animateClass.call( this,
 				{ remove: classNames }, speed, easing, callback ) :
-			this._removeClass( classNames );
+			this._removeClass.apply( this, arguments );
 	},
 
 	_toggleClass: $.fn.toggleClass,
